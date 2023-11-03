@@ -1,7 +1,6 @@
 import { Button } from "@/ui/Button";
 import { Flex } from "@/ui/Flex";
 import { Typography } from "@/ui/Typography";
-import styles from "@/styles/Home.module.css";
 import { Box } from "@/ui/Box";
 import { styled } from "@/stitches.config";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/Tabs";
@@ -17,17 +16,25 @@ import {
 } from "@/ui/Select";
 import { Label } from "@/ui/Label";
 import { RxChevronDown, RxPlus, RxTrash } from "react-icons/rx";
-import { useForm } from "react-hook-form";
-import { UploadSchema, uploadSchema } from "./schema";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { Track, UploadSchema, uploadSchema } from "./schema";
 import { TextField } from "@/ui/TextField";
 import { Textarea } from "@/ui/Textarea";
 import { genres } from "@/data/genres";
 import { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { IconButton } from "@/ui/IconButton";
+import { Tracklist } from "./Tracklist";
+import { Container } from "@/ui/Container";
+import { FormHelperError, FormHelperText, FormRow } from "@/ui/Form";
+import { useDynamicForm } from "@/hooks/useDynamicForm";
+import { useFieldArray, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { DetailsDialog } from "./DetailsDialog";
+import { ImageDropContainer } from "./components/ImageDropContainer";
+import { Image } from "@/ui/Image";
+import { useWallet } from "@/hooks/useWallet";
 
-const DropContainer = styled("div", {
+const AudioDropContainer = styled("div", {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -36,135 +43,15 @@ const DropContainer = styled("div", {
   cursor: "pointer",
   border: "2px dashed $colors$slate6",
   position: "relative",
-  backgroundSize: "cover",
-  backgroundRepeat: "no-repeat",
-  backgroundPosition: "center",
-
-  "&:hover": {
-    border: "2px dashed $colors$slate7",
-  },
+  width: "100%",
+  minHeight: 120,
 
   variants: {
-    size: {
-      1: {
-        width: 200,
-        height: 200,
-        // fontSize: "$1",
-        "& svg": {
-          width: 40,
-          height: 40,
-        },
-      },
-      2: {
-        width: 300,
-        height: 300,
-        // fontSize: "$2",
-        "& svg": {
-          width: 80,
-          height: 80,
-        },
-      },
-      3: {
-        width: 400,
-        height: 400,
-        // fontSize: "$2",
-        "& svg": {
-          width: 140,
-          height: 140,
-        },
-      },
-    },
     hovered: {
       true: {
         border: "2px dashed $colors$focus",
       },
     },
-    hidden: {
-      true: {
-        border: "none",
-
-        "&:hover": {
-          border: "none",
-        },
-        "& svg": {
-          display: "none",
-        },
-        "& p": {
-          display: "none",
-        },
-      },
-    },
-  },
-  compoundVariants: [
-    {
-      hovered: true,
-      hidden: true,
-      css: {
-        border: "none",
-        opacity: 0.7,
-      },
-    },
-  ],
-
-  defaultVariants: {
-    size: "2",
-  },
-});
-
-const Container = styled("div", {
-  display: "flex",
-  width: "100%",
-  mx: "auto",
-
-  "@bp3": {
-    px: 0,
-    maxWidth: 700,
-  },
-  "@bp4": {
-    maxWidth: 1000,
-  },
-  "@bp5": {
-    maxWidth: 1200,
-  },
-});
-
-const FormHelperErrorText = styled("p", {
-  fontSize: "$1",
-  lineHeight: "$2",
-  color: "$red11",
-  m: 0,
-  mt: "$1",
-  position: "absolute",
-  bottom: 0,
-});
-
-const FormHelperError = ({ children }: { children: React.ReactNode }) => (
-  <FormHelperErrorText role="alert" aria-live="polite">
-    {children}
-  </FormHelperErrorText>
-);
-
-const FormHelperText = styled("p", {
-  fontSize: "$1",
-  lineHeight: "$2",
-  m: 0,
-  mt: "$1",
-  position: "absolute",
-  bottom: 0,
-});
-
-const FormRow = styled(Flex, {
-  gap: "$3",
-  mt: "$10",
-  pb: "$7",
-  position: "relative",
-
-  defaultVariants: {
-    direction: "column",
-  },
-
-  "& span": {
-    color: "$slate12",
   },
 });
 
@@ -185,39 +72,84 @@ type CurrentTab = "details" | "tracklist" | "review";
 
 type FormTabs = {
   details: Tab;
-  // tracklist: Tab;
+  tracklist: Tab;
 };
 
 export const Upload = () => {
   const [releaseArtwork, setReleaseArtwork] = useState<string>();
+  const [showDetailsDialog, setShowDetailsDialog] = useState({
+    open: false,
+    index: 0,
+  });
   const [currentTab, setCurrentTab] = useState<CurrentTab>("details");
   const [formTabs, setFormTabs] = useState<FormTabs>({
     details: {
       name: "details",
       fields: ["title", "description", "genre", "releaseDate"],
     },
+    tracklist: {
+      name: "tracklist",
+      fields: ["tracklist"],
+    },
   });
+  const { walletAddress, connect } = useWallet();
 
-  const {
-    register,
-    handleSubmit,
-    trigger,
-    getValues,
-    setValue,
-    resetField,
-    formState: { errors },
-  } = useForm<UploadSchema>({
+  const form = useForm<UploadSchema>({
     resolver: zodResolver(uploadSchema),
     defaultValues: {
       genre: "none",
     },
   });
 
+  // const { form } = useDynamicForm();
+  const {
+    getValues,
+    trigger,
+    setValue,
+    resetField,
+    register,
+    handleSubmit,
+    watch,
+    formState,
+  } = form;
+  const { errors } = formState;
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "tracklist",
+  });
+
+  const handlePrevious = () => {
+    if (currentTab === "tracklist") {
+      setCurrentTab("details");
+    }
+    if (currentTab === "review") {
+      setCurrentTab("tracklist");
+    }
+  };
+
   const handleNext = async () => {
     const fields = formTabs[currentTab as keyof FormTabs].fields;
     const output = await trigger(fields as FieldName[], { shouldFocus: true });
 
-    if (!output) return;
+    console.log(form.getValues());
+
+    await handleSubmit((data) => console.log(data))();
+
+    try {
+      const result = uploadSchema.parse(getValues());
+      console.log(result);
+    } catch (error) {
+      console.error(error);
+    }
+
+    // if (!result.success) {
+    //   console.log(result.error);
+    // }
+
+    if (!output) {
+      return;
+    }
 
     if (currentTab === "details") {
       setCurrentTab("tracklist");
@@ -228,7 +160,7 @@ export const Upload = () => {
     }
   };
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  const onImageDrop = useCallback((acceptedFiles: File[]) => {
     // Do something with the files
     const imageFile = acceptedFiles[0];
 
@@ -262,17 +194,72 @@ export const Upload = () => {
     reader.readAsArrayBuffer(imageFile);
   }, []);
 
-  useEffect(() => {
-    if (releaseArtwork) {
-      console.log(releaseArtwork);
-    }
-  }, [releaseArtwork]);
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const image = useDropzone({
     accept: { "image/*": [".jpeg", ".png", ".webp", ".avif"] },
     maxFiles: 1,
-    // accept: { "audio/*": [".wav", ".flac", ".mp3", ".aac"] },
-    onDrop,
+    onDrop: onImageDrop,
+  });
+
+  const onAudioDrop = useCallback(async (acceptedFiles: File[]) => {
+    for (let i = 0; i < acceptedFiles.length; i++) {
+      const file = acceptedFiles[i];
+
+      const reader = new FileReader();
+
+      reader.onabort = () => console.log("file reading was aborted");
+
+      try {
+        const track = await new Promise<Track>((resolve, reject) => {
+          // create a new FileReader
+          // read the file as an ArrayBuffer
+          reader.readAsArrayBuffer(file);
+
+          reader.onload = () => {
+            let blob;
+            let url;
+            blob = new Blob([file], { type: file.type });
+            url = window.URL.createObjectURL(blob);
+
+            const track: Track = {
+              file: {
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                url,
+              },
+              data: reader.result as ArrayBuffer,
+              metadata: {
+                title: file.name,
+                description: "",
+                artwork: {
+                  data: form.getValues("releaseArtwork.data"),
+                  file: {
+                    name: "",
+                    size: 0,
+                    type: "",
+                    url: form.getValues("releaseArtwork.file.url"),
+                  },
+                },
+              },
+            };
+            resolve(track);
+          };
+
+          reader.onerror = () => {
+            reject(new Error("Error reading your file"));
+          };
+        });
+
+        append(track);
+      } catch (error) {
+        console.error("Unsupported file type.");
+      }
+    }
+  }, []);
+
+  const audio = useDropzone({
+    accept: { "audio/*": [".wav", ".flac", ".mp3", ".aac"] },
+    onDrop: onAudioDrop,
   });
 
   const handleRemoveCoverArt = (e: any) => {
@@ -282,16 +269,30 @@ export const Upload = () => {
     setReleaseArtwork(undefined);
   };
 
+  const handleShowDetailsDialog = (index: number) =>
+    setShowDetailsDialog({ open: true, index });
+  const handleCancelDetailsDialog = (index: number) =>
+    setShowDetailsDialog({ open: false, index });
+
+  const isAlbum =
+    //@ts-ignore
+    !!form.getValues("tracklist") && form.getValues("tracklist").length > 1;
+
+  const tracks =
+    //@ts-ignore
+    form.getValues("tracklist") && form.getValues("tracklist").length;
+
   return (
     <Fullscreen>
       <Flex direction="column">
-        <Flex justify="between" align="center" css={{ p: "$7" }}>
-          <Typography size="5">radar</Typography>
-          <Button>connect wallet</Button>
+        <Flex
+          justify="between"
+          align="center"
+          css={{ py: "$3", px: "$7", mb: "$5" }}
+        >
+          <Typography contrast="hi">radar</Typography>
+          <Button variant="transparent">connect wallet</Button>
         </Flex>
-        <Button css={{ alignSelf: "center" }} onClick={() => trigger()}>
-          Display requirements
-        </Button>
         <Container
           css={{
             pb: 120,
@@ -313,7 +314,7 @@ export const Upload = () => {
               <TabsTrigger value="review">Review</TabsTrigger>
             </TabsList>
             <TabsContent value="details">
-              <Flex gap="10">
+              <Flex gap="20">
                 <Flex css={{ flex: 1 }} direction="column">
                   <FormRow>
                     <Label htmlFor="title">Title</Label>
@@ -387,7 +388,7 @@ export const Upload = () => {
                   }}
                 >
                   <Label htmlFor="releaseArtwork">Cover Art</Label>
-                  <DropContainer
+                  <ImageDropContainer
                     css={{
                       background: releaseArtwork
                         ? `url(${releaseArtwork})`
@@ -396,11 +397,11 @@ export const Upload = () => {
                       mb: "$15",
                     }}
                     hidden={!!releaseArtwork}
-                    hovered={isDragActive}
+                    hovered={image.isDragActive}
                     size="3"
-                    {...getRootProps()}
+                    {...image.getRootProps()}
                   >
-                    <input {...getInputProps()} />
+                    <input {...image.getInputProps()} />
                     <RxPlus />
                     <Typography
                       size="1"
@@ -438,7 +439,7 @@ export const Upload = () => {
                         <RxTrash />
                       </IconButton>
                     )}
-                  </DropContainer>
+                  </ImageDropContainer>
                   {errors.releaseArtwork?.data ? (
                     <FormHelperError>
                       {errors.releaseArtwork.data.message}
@@ -455,8 +456,150 @@ export const Upload = () => {
                 </FormRow>
               </Flex>
             </TabsContent>
-            <TabsContent value="tracklist">Add tracklist</TabsContent>
-            <TabsContent value="review">Review your changes</TabsContent>
+            <TabsContent value="tracklist">
+              <Container
+                css={{
+                  maxWidth: 700,
+                }}
+              >
+                <Flex
+                  css={{ mx: "auto", mt: "$10", width: "100%" }}
+                  direction="column"
+                  align="center"
+                  gap="10"
+                >
+                  <AudioDropContainer {...audio.getRootProps()}>
+                    <input {...audio.getInputProps()} />
+                    <Flex gap="5" align="center">
+                      <Flex direction="column" align="center">
+                        <Typography css={{ color: "$slate12" }}>
+                          Drag your songs here
+                        </Typography>
+                        <Typography size="1">
+                          .mp3, .wav, .flac, .aiff
+                        </Typography>
+                      </Flex>
+                      <Typography>or</Typography>
+                      <Typography css={{ color: "$violet11" }}>
+                        Browse your computer
+                      </Typography>
+                    </Flex>
+                  </AudioDropContainer>
+                  {/* {form.formState.errors.tracklist && (
+          <FormHelperErrorText>
+            {form.formState.errors.tracklist.message}
+          </FormHelperErrorText>
+        )} */}
+                  {/* {tracklist && tracklist.length && ( */}
+                  <Flex css={{ width: "100%" }} direction="column" gap="3">
+                    {fields.map((track, index) => (
+                      <Flex
+                        key={track.id}
+                        css={{
+                          backgroundColor: "$slate2",
+                          width: "100%",
+                          py: "$5",
+                          pr: "$3",
+                          pl: "$7",
+                          br: "$1",
+                        }}
+                        justify="between"
+                        align="center"
+                      >
+                        <Typography>{track.file.name}</Typography>
+                        <Flex>
+                          <Button
+                            onClick={() => handleShowDetailsDialog(index)}
+                            variant="transparent"
+                            size="1"
+                          >
+                            Edit track details
+                          </Button>
+                          <Button
+                            css={{
+                              color: "$red10",
+
+                              "&:hover": {
+                                color: "$red11",
+                              },
+                            }}
+                            onClick={() => remove(index)}
+                            variant="transparent"
+                            size="1"
+                          >
+                            Delete
+                          </Button>
+                        </Flex>
+
+                        <DetailsDialog
+                          track={track}
+                          form={form}
+                          index={index}
+                          open={
+                            showDetailsDialog.open &&
+                            index === showDetailsDialog.index
+                          }
+                          onClose={() => handleCancelDetailsDialog(index)}
+                        />
+                      </Flex>
+                    ))}
+                  </Flex>
+                </Flex>
+              </Container>
+            </TabsContent>
+            <TabsContent value="review">
+              <Typography css={{ mt: "$10" }} as="h3" size="5" contrast="hi">
+                Review
+              </Typography>
+              <Flex css={{ mt: "$10" }} justify="between" gap="20">
+                <Flex css={{ flex: 1 }} direction="column" gap="10">
+                  <Box>
+                    <Typography size="4" contrast="hi">
+                      {getValues("title")}
+                    </Typography>
+                    {isAlbum ? (
+                      <Typography>Album release, {tracks} tracks</Typography>
+                    ) : (
+                      <Typography>Single release, {tracks} track</Typography>
+                    )}
+                  </Box>
+                  <Box>
+                    <Typography>Release Description</Typography>
+                    <Typography contrast="hi">
+                      {getValues("description")}
+                    </Typography>
+                  </Box>
+                  {walletAddress ? (
+                    <Button type="submit" css={{ mt: "auto" }} variant="solid">
+                      Submit
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      onClick={() =>
+                        connect([
+                          "ACCESS_ADDRESS",
+                          "ACCESS_PUBLIC_KEY",
+                          "SIGNATURE",
+                          "SIGN_TRANSACTION",
+                        ])
+                      }
+                      css={{ mt: "auto" }}
+                      variant="solid"
+                    >
+                      Connect to submit
+                    </Button>
+                  )}
+                </Flex>
+                <Image
+                  css={{
+                    width: 400,
+                    height: 400,
+                  }}
+                  src={getValues("releaseArtwork.file.url")}
+                />
+              </Flex>
+            </TabsContent>
           </Tabs>
         </Container>
       </Flex>
@@ -475,17 +618,23 @@ export const Upload = () => {
           css={{
             justifyContent: currentTab === "details" ? "end" : "space-between",
 
-            py: "$7",
+            py: "$5",
           }}
         >
-          {currentTab !== "details" && <Button variant="outline">Back</Button>}
-          <Button
-            onClick={handleNext}
-            variant="solid"
-            css={{ alignSelf: "end" }}
-          >
-            Next
-          </Button>
+          {currentTab !== "details" && (
+            <Button onClick={handlePrevious} variant="outline">
+              Back
+            </Button>
+          )}
+          {currentTab !== "review" && (
+            <Button
+              onClick={handleNext}
+              variant="solid"
+              css={{ alignSelf: "end" }}
+            >
+              Next
+            </Button>
+          )}
         </Container>
       </Box>
     </Fullscreen>

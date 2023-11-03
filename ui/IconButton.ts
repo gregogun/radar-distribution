@@ -85,11 +85,11 @@ export const IconButton = styled("button", {
         backgroundColor: "transparent",
 
         "&:hover": {
-          backgroundColor: "$$bgHover",
+          backgroundColor: "$slate4",
         },
 
         "&:active": {
-          backgroundColor: "$$bgActive",
+          backgroundColor: "$slate5",
         },
       },
       transparent: {
@@ -149,7 +149,7 @@ export const IconButton = styled("button", {
   ],
 
   defaultVariants: {
-    // size: "2",
-    // variant: "subtle",
+    size: "2",
+    variant: "subtle",
   },
 });

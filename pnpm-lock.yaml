@@ -16,6 +16,7 @@ specifiers:
   '@types/node': 18.11.18
   '@types/react': 18.0.27
   '@types/react-dom': 18.0.10
+  arconnect: 1.0.3
   arweave: 1.13.7
   arweave-account: 1.4.3
   arweave-graphql: 0.0.5
@@ -49,6 +50,7 @@ dependencies:
   '@radix-ui/react-slider': 1.1.2_fxtgt6bjwd6p4cwoordejim2zi
   '@radix-ui/react-tabs': 1.0.4_fxtgt6bjwd6p4cwoordejim2zi
   '@stitches/react': 1.2.8_react@18.2.0
+  arconnect: 1.0.3
   arweave: 1.13.7
   arweave-account: 1.4.3
   arweave-graphql: 0.0.5
@@ -2030,6 +2032,10 @@ packages:
     resolution: {integrity: sha512-Jkpd4QL3TVqnd3U683gzXmZUVqBUy17DdJDuL/3D9rkysLgX6ymJ2e+sR+xyZF5Rh42CBqDXWNMmCjBXeP7Gbw==}
     dependencies:
       arweave: 1.13.7
+    dev: false
+
+  /arconnect/1.0.3:
+    resolution: {integrity: sha512-A4BTa1hl8SIbAMVUOsIiLwavmCvIMpbEFSem64klDBuBOMoIuEMUPxP5AoUfUxJZwUdL3NhNj584lCWUSGtdyA==}
     dev: false
 
   /ardb/1.1.10:

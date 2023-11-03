@@ -6,6 +6,8 @@ import { Link } from "react-router-dom";
 
 const LinkButton = styled(Link, Button, {
   cursor: "pointer",
+  // fix issue with gradient on top of button
+  zIndex: 1,
   defaultVariants: {
     variant: "solid",
   },

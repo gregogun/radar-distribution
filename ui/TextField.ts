@@ -75,14 +75,14 @@ export const TextField = styled("input", {
       },
       outline: {
         boxShadow: "inset 0 0 0 1px $colors$slate7",
-        "&:hover": {
-          boxShadow: "inset 0 0 0 1px $colors$slate8",
-        },
+        // "&:hover": {
+        //   boxShadow: "inset 0 0 0 1px $colors$slate8",
+        // },
       },
       ghost: {
-        "&:hover": {
-          boxShadow: "inset 0 0 0 1px $colors$slate8",
-        },
+        // "&:hover": {
+        //   boxShadow: "inset 0 0 0 1px $colors$slate8",
+        // },
       },
       flushed: {
         "&[type]": {
@@ -90,9 +90,9 @@ export const TextField = styled("input", {
           br: 0,
           borderBottom: "1px solid $colors$slate7",
 
-          "&:hover": {
-            borderBottom: "1px solid $colors$slate8",
-          },
+          // "&:hover": {
+          //   borderBottom: "1px solid $colors$slate8",
+          // },
 
           "&:focus": {
             boxShadow: "none",
@@ -160,9 +160,9 @@ export const TextField = styled("input", {
       border: true,
       css: {
         boxShadow: "inset 0 0 0 1px $colors$slate7",
-        "&:hover": {
-          boxShadow: "inset 0 0 0 1px $colors$slate8",
-        },
+        // "&:hover": {
+        //   boxShadow: "inset 0 0 0 1px $colors$slate8",
+        // },
       },
     },
   ],

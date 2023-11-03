@@ -9,7 +9,7 @@ export const SelectTrigger = styled(SelectPrimitive.Trigger, {
   alignItems: "center",
   justifyContent: "space-between",
   p: "$3",
-  br: "$md",
+  br: "$1",
   boxShadow: "0 0 0 1px $colors$slate6",
   fontSize: "$sm",
 
@@ -36,7 +36,7 @@ export const SelectContent = styled(SelectPrimitive.Content, {
   overflow: "hidden",
   backgroundColor: "$slate1",
   boxShadow: "0 0 0 2px $colors$slate6",
-  br: "$md",
+  br: "$1",
 });
 
 export const SelectViewport = styled(SelectPrimitive.Viewport, {
@@ -54,6 +54,7 @@ const StyledItem = styled(SelectPrimitive.Item, {
   px: "$5",
   position: "relative",
   userSelect: "none",
+  br: "$1",
 
   "&[data-disabled]": {
     opacity: 0.5,

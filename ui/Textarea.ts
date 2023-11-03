@@ -22,6 +22,7 @@ export const Textarea = styled("textarea", {
 
   //custom
   px: "$2",
+  py: "$1",
   br: "$1",
   color: "$slate12",
   boxShadow: "0 0 0 1px $colors$slate7",
@@ -67,21 +68,21 @@ export const Textarea = styled("textarea", {
       3: {
         height: 80,
         fontSize: "$3",
-        lineHeight: "$3",
+        lineHeight: "$sizes$35",
       },
     },
     variant: {
       subtle: {
         backgroundColor: "$slate2",
 
-        "&:hover": {
-          backgroundColor: "$slate3",
-        },
+        // "&:hover": {
+        //   backgroundColor: "$slate3",
+        // },
       },
       outline: {
-        "&:hover": {
-          boxShadow: "0 0 0 1px $colors$slate8",
-        },
+        // "&:hover": {
+        //   boxShadow: "0 0 0 1px $colors$slate8",
+        // },
       },
     },
     state: {
