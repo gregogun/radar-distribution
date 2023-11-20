@@ -490,6 +490,16 @@ export const Upload = () => {
                       />
                     </FormRow>
                     <FormRow>
+                      <Label htmlFor="topics">Additional Tags</Label>
+                      <TextField
+                        id="topics"
+                        type="text"
+                        placeholder="Comma-seperated list of tags describing the mood of your track"
+                        {...register("topics")}
+                        size="3"
+                      />
+                    </FormRow>
+                    <FormRow>
                       <Label htmlFor="releaseDate">
                         Release Date (optional)
                       </Label>
@@ -796,7 +806,7 @@ export const Upload = () => {
           borderTop: "$slate6 1px solid",
           backgroundColor: "$blackA11",
           backdropFilter: "blur(4px)",
-          position: "absolute",
+          position: "fixed",
           right: 0,
           left: 0,
           bottom: 0,
