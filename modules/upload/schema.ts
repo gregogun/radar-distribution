@@ -1,6 +1,24 @@
 import { genres } from "@/data/genres";
 import { z } from "Zod";
 
+const udlMetadataSchema = z
+  .object({
+    derivation: z.enum([
+      "with-credit",
+      "with-indication",
+      "with-passthrough",
+      "with-revenue-share",
+      "none",
+    ]),
+    commercial: z.enum(["allowed", "allow-with-credit", "none"]),
+    revenueSharePercentage: z.number().nonnegative(),
+    fee: z.number().nonnegative(),
+    feeRecurrence: z.enum(["one-time", "monthly"]),
+    currency: z.enum(["AR", "U"]),
+    paymentMode: z.enum(["global", "random"]),
+  })
+  .optional();
+
 export type UploadSchema = z.infer<typeof uploadSchema>;
 
 const artworkSchema = z.object(
@@ -54,4 +72,6 @@ export const uploadSchema = z.object({
   releaseDate: z.string().optional(),
   releaseArtwork: artworkSchema,
   tracklist: z.array(trackSchema).min(1, "At least 1 track is required"),
+  licenseType: z.enum(["none", "udl"]).default("none"),
+  udlMetadata: udlMetadataSchema,
 });
