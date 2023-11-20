@@ -24,6 +24,7 @@ const trackMetadataSchema = z.object({
     .min(1, "Description is required")
     .max(300, "Description must contain less than 300 characters")
     .default(""),
+  genre: z.enum(genres).default("none"),
   topics: z.string().optional(),
   artwork: artworkSchema,
 });
