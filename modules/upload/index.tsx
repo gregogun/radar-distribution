@@ -760,33 +760,6 @@ export const Upload = () => {
                         {getValues("description")}
                       </Typography>
                     </Box>
-                    {walletAddress ? (
-                      <Button
-                        size="3"
-                        type="submit"
-                        css={{ mt: "auto" }}
-                        variant="solid"
-                      >
-                        Submit
-                      </Button>
-                    ) : (
-                      <Button
-                        size="3"
-                        type="button"
-                        onClick={() =>
-                          connect([
-                            "ACCESS_ADDRESS",
-                            "ACCESS_PUBLIC_KEY",
-                            "SIGNATURE",
-                            "SIGN_TRANSACTION",
-                          ])
-                        }
-                        css={{ mt: "auto" }}
-                        variant="solid"
-                      >
-                        Connect to submit
-                      </Button>
-                    )}
                   </Flex>
                   <Image
                     css={{
@@ -826,13 +799,36 @@ export const Upload = () => {
           )}
           {currentTab !== "review" && (
             <Button
-              // disabled={!detailsValidStatus}
               onClick={handleNext}
               variant="solid"
               css={{ alignSelf: "end" }}
             >
               Next
             </Button>
+          )}
+          {currentTab === "review" && (
+            <>
+              {walletAddress ? (
+                <Button type="submit" variant="solid">
+                  Submit
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  onClick={() =>
+                    connect([
+                      "ACCESS_ADDRESS",
+                      "ACCESS_PUBLIC_KEY",
+                      "SIGNATURE",
+                      "SIGN_TRANSACTION",
+                    ])
+                  }
+                  variant="solid"
+                >
+                  Connect to submit
+                </Button>
+              )}
+            </>
           )}
         </Container>
       </Box>
