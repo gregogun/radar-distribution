@@ -50,6 +50,7 @@ export const uploadSchema = z.object({
     .max(300, "Description must contain less than 300 characters")
     .default(""),
   genre: z.enum(genres).default("none"),
+  topics: z.string().optional(),
   releaseDate: z.string().optional(),
   releaseArtwork: artworkSchema,
   tracklist: z.array(trackSchema).min(1, "At least 1 track is required"),
