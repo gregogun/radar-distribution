@@ -95,8 +95,10 @@ export const DetailsDialog = ({
       const title = form.getValues("tracklist")[index].metadata.title;
       const description =
         form.getValues("tracklist")[index].metadata.description;
+      const topics = form.getValues("tracklist")[index].metadata.topics;
       const releaseTitle = form.getValues("title");
       const releaseDescription = form.getValues("description");
+      const releaseTopics = form.getValues("topics");
 
       if (title !== releaseTitle) {
         form.setValue(`tracklist.${index}.metadata.title`, releaseTitle);
@@ -111,6 +113,10 @@ export const DetailsDialog = ({
 
       if (trackArtwork !== releaseArtwork) {
         form.setValue(`tracklist.${index}.metadata.artwork`, releaseArtwork);
+      }
+
+      if (topics && topics !== releaseTopics) {
+        form.setValue(`tracklist.${index}.metadata.topics`, releaseTopics);
       }
     }
   }, [form.getValues("tracklist")]);
@@ -212,6 +218,20 @@ export const DetailsDialog = ({
                 )}
                 name={`tracklist.${index}.metadata.genre`}
                 control={form.control}
+              />
+            </FormRow>
+            <FormRow>
+              <Label htmlFor={`tracklist.${index}.metadata.topics`}>
+                Additional Tags
+              </Label>
+              <TextField
+                disabled={form.getValues("tracklist").length <= 1}
+                type="text"
+                placeholder="Comma-seperated list of tags describing the mood of your track"
+                {...form.register(
+                  `tracklist.${index}.metadata.topics` as const
+                )}
+                size="3"
               />
             </FormRow>
           </Flex>

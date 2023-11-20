@@ -490,6 +490,16 @@ export const Upload = () => {
                       />
                     </FormRow>
                     <FormRow>
+                      <Label htmlFor="topics">Additional Tags</Label>
+                      <TextField
+                        id="topics"
+                        type="text"
+                        placeholder="Comma-seperated list of tags describing the mood of your track"
+                        {...register("topics")}
+                        size="3"
+                      />
+                    </FormRow>
+                    <FormRow>
                       <Label htmlFor="releaseDate">
                         Release Date (optional)
                       </Label>
@@ -750,33 +760,6 @@ export const Upload = () => {
                         {getValues("description")}
                       </Typography>
                     </Box>
-                    {walletAddress ? (
-                      <Button
-                        size="3"
-                        type="submit"
-                        css={{ mt: "auto" }}
-                        variant="solid"
-                      >
-                        Submit
-                      </Button>
-                    ) : (
-                      <Button
-                        size="3"
-                        type="button"
-                        onClick={() =>
-                          connect([
-                            "ACCESS_ADDRESS",
-                            "ACCESS_PUBLIC_KEY",
-                            "SIGNATURE",
-                            "SIGN_TRANSACTION",
-                          ])
-                        }
-                        css={{ mt: "auto" }}
-                        variant="solid"
-                      >
-                        Connect to submit
-                      </Button>
-                    )}
                   </Flex>
                   <Image
                     css={{
@@ -796,7 +779,7 @@ export const Upload = () => {
           borderTop: "$slate6 1px solid",
           backgroundColor: "$blackA11",
           backdropFilter: "blur(4px)",
-          position: "absolute",
+          position: "fixed",
           right: 0,
           left: 0,
           bottom: 0,
@@ -816,13 +799,36 @@ export const Upload = () => {
           )}
           {currentTab !== "review" && (
             <Button
-              // disabled={!detailsValidStatus}
               onClick={handleNext}
               variant="solid"
               css={{ alignSelf: "end" }}
             >
               Next
             </Button>
+          )}
+          {currentTab === "review" && (
+            <>
+              {walletAddress ? (
+                <Button type="submit" variant="solid">
+                  Submit
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  onClick={() =>
+                    connect([
+                      "ACCESS_ADDRESS",
+                      "ACCESS_PUBLIC_KEY",
+                      "SIGNATURE",
+                      "SIGN_TRANSACTION",
+                    ])
+                  }
+                  variant="solid"
+                >
+                  Connect to submit
+                </Button>
+              )}
+            </>
           )}
         </Container>
       </Box>

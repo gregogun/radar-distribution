@@ -49,7 +49,6 @@ export const Textarea = styled("textarea", {
   },
 
   "&:read-only": {
-    backgroundColor: "$slate3",
     boxShadow: "inset 0 0 0 1px $colors$slate7",
   },
 
