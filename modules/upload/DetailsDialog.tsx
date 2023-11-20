@@ -3,7 +3,7 @@ import { FormHelperError, FormHelperText, FormRow } from "@/ui/Form";
 import { Label } from "@/ui/Label";
 import { TextField } from "@/ui/TextField";
 import { Typography } from "@/ui/Typography";
-import { UseFormReturn, useFormContext } from "react-hook-form";
+import { Controller, UseFormReturn, useFormContext } from "react-hook-form";
 import { Track, UploadSchema } from "./schema";
 import { IconButton } from "@/ui/IconButton";
 import { RxChevronDown, RxCross2, RxPlus, RxTrash } from "react-icons/rx";
@@ -126,13 +126,13 @@ export const DetailsDialog = ({
           maxWidth: 800,
           overflowY: "scroll",
 
-          "@bp4": {
-            maxHeight: 600,
-          },
+          // "@bp4": {
+          //   maxHeight: 600,
+          // },
 
-          "@bp5": {
-            maxHeight: 700,
-          },
+          // "@bp5": {
+          //   maxHeight: 700,
+          // },
         }}
       >
         <DialogTitle asChild>
@@ -181,6 +181,38 @@ export const DetailsDialog = ({
                     }
                   </FormHelperError>
                 )}
+            </FormRow>
+            <FormRow>
+              <Label htmlFor={`tracklist.${index}.metadata.genre`}>Genre</Label>
+              <Controller
+                render={({ field: { onChange } }) => (
+                  <Select
+                    disabled={form.getValues("tracklist").length <= 1}
+                    onValueChange={(e) => onChange(e)}
+                    value={form.getValues("tracklist")[index].metadata.genre}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                      <SelectIcon>
+                        <RxChevronDown />
+                      </SelectIcon>
+                    </SelectTrigger>
+                    <SelectPortal>
+                      <SelectContent sideOffset={8}>
+                        <SelectViewport>
+                          {genres.map((genre) => (
+                            <SelectItem key={genre} value={genre}>
+                              {genre}
+                            </SelectItem>
+                          ))}
+                        </SelectViewport>
+                      </SelectContent>
+                    </SelectPortal>
+                  </Select>
+                )}
+                name={`tracklist.${index}.metadata.genre`}
+                control={form.control}
+              />
             </FormRow>
           </Flex>
 

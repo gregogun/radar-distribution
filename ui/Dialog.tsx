@@ -62,14 +62,12 @@ export type DialogContentProps = ComponentProps<typeof StyledDialogContent> &
 export const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
   ({ children, forceMount, container, ...props }, ref) => {
     return (
-      <>
+      <DialogPrimitive.Portal forceMount={forceMount} container={container}>
         <DialogOverlay />
-        <DialogPrimitive.Portal forceMount={forceMount} container={container}>
-          <StyledDialogContent ref={ref} {...props}>
-            {children}
-          </StyledDialogContent>
-        </DialogPrimitive.Portal>
-      </>
+        <StyledDialogContent ref={ref} {...props}>
+          {children}
+        </StyledDialogContent>
+      </DialogPrimitive.Portal>
     );
   }
 );

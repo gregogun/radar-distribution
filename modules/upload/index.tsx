@@ -34,7 +34,12 @@ import { Tracklist } from "./Tracklist";
 import { Container } from "@/ui/Container";
 import { FormHelperError, FormHelperText, FormRow } from "@/ui/Form";
 import { useDynamicForm } from "@/hooks/useDynamicForm";
-import { FormProvider, useFieldArray, useForm } from "react-hook-form";
+import {
+  Controller,
+  FormProvider,
+  useFieldArray,
+  useForm,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DetailsDialog } from "./DetailsDialog";
 import { ImageDropContainer } from "./components/ImageDropContainer";
@@ -127,7 +132,7 @@ export const Upload = () => {
   const {
     getValues,
     trigger,
-    setValue,
+    control,
     resetField,
     register,
     handleSubmit,
@@ -300,6 +305,7 @@ export const Upload = () => {
               metadata: {
                 title: file.name,
                 description: "",
+                genre: form.getValues("genre"),
                 artwork: {
                   // data: form.getValues("releaseArtwork.data"),
                   file: form.getValues("releaseArtwork.file"),
@@ -339,6 +345,7 @@ export const Upload = () => {
             title: form.getValues("title"),
             description: form.getValues("description"),
             artwork: form.getValues("releaseArtwork"),
+            genre: form.getValues("genre"),
           },
         });
       } else {
@@ -453,28 +460,34 @@ export const Upload = () => {
                     </FormRow>
                     <FormRow>
                       <Label htmlFor="genre">Genre</Label>
-                      <Select
-                        defaultValue={getValues("genre")}
-                        {...register("genre")}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                          <SelectIcon>
-                            <RxChevronDown />
-                          </SelectIcon>
-                        </SelectTrigger>
-                        <SelectPortal>
-                          <SelectContent sideOffset={8}>
-                            <SelectViewport>
-                              {genres.map((genre) => (
-                                <SelectItem key={genre} value={genre}>
-                                  {genre}
-                                </SelectItem>
-                              ))}
-                            </SelectViewport>
-                          </SelectContent>
-                        </SelectPortal>
-                      </Select>
+                      <Controller
+                        render={({ field: { onChange } }) => (
+                          <Select
+                            onValueChange={(e) => onChange(e)}
+                            value={form.getValues("genre")}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                              <SelectIcon>
+                                <RxChevronDown />
+                              </SelectIcon>
+                            </SelectTrigger>
+                            <SelectPortal>
+                              <SelectContent sideOffset={8}>
+                                <SelectViewport>
+                                  {genres.map((genre) => (
+                                    <SelectItem key={genre} value={genre}>
+                                      {genre}
+                                    </SelectItem>
+                                  ))}
+                                </SelectViewport>
+                              </SelectContent>
+                            </SelectPortal>
+                          </Select>
+                        )}
+                        name="genre"
+                        control={control}
+                      />
                     </FormRow>
                     <FormRow>
                       <Label htmlFor="releaseDate">
@@ -783,7 +796,7 @@ export const Upload = () => {
           borderTop: "$slate6 1px solid",
           backgroundColor: "$blackA11",
           backdropFilter: "blur(4px)",
-          position: "fixed",
+          position: "absolute",
           right: 0,
           left: 0,
           bottom: 0,
