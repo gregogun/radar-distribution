@@ -14,7 +14,7 @@ export const SelectTrigger = styled(SelectPrimitive.Trigger, {
   fontSize: "$sm",
 
   "&:hover": { boxShadow: "0 0 0 1px $colors$slate7" },
-  "&:focus": { boxShadow: "0 0 0 2px $colors$violet9" },
+  "&:focus": { boxShadow: "0 0 0 2px $colors$focus" },
   "&[data-placeholder]": { color: "$slate9" },
 
   "&:disabled": {
@@ -63,7 +63,7 @@ const StyledItem = styled(SelectPrimitive.Item, {
 
   "&[data-highlighted]": {
     outline: "none",
-    backgroundColor: "$violet9",
+    backgroundColor: "$blue9",
     color: "#fff",
   },
 });

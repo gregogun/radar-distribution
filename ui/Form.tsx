@@ -1,4 +1,4 @@
-import { styled } from "@/stitches.config";
+import { CSS, styled } from "@/stitches.config";
 import { Flex } from "./Flex";
 
 const FormHelperErrorText = styled("p", {
@@ -13,10 +13,12 @@ const FormHelperErrorText = styled("p", {
 
 export const FormHelperError = ({
   children,
+  css,
 }: {
   children: React.ReactNode;
+  css?: CSS;
 }) => (
-  <FormHelperErrorText role="alert" aria-live="polite">
+  <FormHelperErrorText css={css} role="alert" aria-live="polite">
     {children}
   </FormHelperErrorText>
 );
@@ -31,7 +33,7 @@ export const FormHelperText = styled("p", {
 });
 
 export const FormRow = styled(Flex, {
-  gap: "$3",
+  gap: "$2",
   mt: "$5",
   pb: "$7",
   position: "relative",

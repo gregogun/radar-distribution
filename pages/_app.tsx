@@ -2,6 +2,7 @@ import { darkTheme, globalCss } from "@/stitches.config";
 import "@/styles/globals.css";
 import { ThemeProvider } from "next-themes";
 import type { AppProps } from "next/app";
+import { Toaster } from "sonner";
 
 const globalStyles = globalCss({
   // "@dark": {
@@ -55,6 +56,7 @@ export default function App({ Component, pageProps }: AppProps) {
       value={{ light: "light-theme", dark: darkTheme.className }}
       enableSystem
     >
+      <Toaster richColors position="bottom-right" />
       <Component {...pageProps} />
     </ThemeProvider>
   );

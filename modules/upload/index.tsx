@@ -15,7 +15,14 @@ import {
   SelectViewport,
 } from "@/ui/Select";
 import { Label } from "@/ui/Label";
-import { RxChevronDown, RxPlus, RxTrash } from "react-icons/rx";
+import {
+  RxChevronDown,
+  RxExclamationTriangle,
+  RxPencil2,
+  RxPlus,
+  RxTrash,
+} from "react-icons/rx";
+import { BsFillExclamationCircleFill } from "react-icons/bs";
 import { Track, UploadSchema, uploadSchema } from "./schema";
 import { TextField } from "@/ui/TextField";
 import { Textarea } from "@/ui/Textarea";
@@ -27,12 +34,15 @@ import { Tracklist } from "./Tracklist";
 import { Container } from "@/ui/Container";
 import { FormHelperError, FormHelperText, FormRow } from "@/ui/Form";
 import { useDynamicForm } from "@/hooks/useDynamicForm";
-import { useFieldArray, useForm } from "react-hook-form";
+import { FormProvider, useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DetailsDialog } from "./DetailsDialog";
 import { ImageDropContainer } from "./components/ImageDropContainer";
 import { Image } from "@/ui/Image";
 import { useWallet } from "@/hooks/useWallet";
+import { upload } from "@/lib/upload";
+import { toast } from "sonner";
+import { ImageDropzone } from "./components/Dropzone";
 
 const AudioDropContainer = styled("div", {
   display: "flex",
@@ -81,11 +91,19 @@ export const Upload = () => {
     open: false,
     index: 0,
   });
+  const [detailsValidStatus, setDetailsValidStatus] = useState(false);
+  const [tracklistValidStatus, setTracklistValidStatus] = useState(false);
   const [currentTab, setCurrentTab] = useState<CurrentTab>("details");
   const [formTabs, setFormTabs] = useState<FormTabs>({
     details: {
       name: "details",
-      fields: ["title", "description", "genre", "releaseDate"],
+      fields: [
+        "title",
+        "description",
+        "releaseArtwork",
+        "genre",
+        "releaseDate",
+      ],
     },
     tracklist: {
       name: "tracklist",
@@ -98,6 +116,10 @@ export const Upload = () => {
     resolver: zodResolver(uploadSchema),
     defaultValues: {
       genre: "none",
+      releaseArtwork: {
+        file: undefined,
+        url: undefined,
+      },
     },
   });
 
@@ -128,13 +150,101 @@ export const Upload = () => {
     }
   };
 
+  // used to dynamically enable/disable tabs based on validity of fields in each stepv
+  const checkRequiredValues = (values: any[]): boolean => {
+    const hasRequiredValues = values.every((field) => {
+      const values = getValues(field);
+
+      console.log(values);
+
+      if (typeof values === "object") {
+        console.log("artwork values:", values);
+        const artworkValid = Object.values(values).every((item) => item);
+        console.log(artworkValid);
+        return artworkValid;
+      }
+
+      return values;
+    });
+
+    return hasRequiredValues;
+  };
+
+  const reactiveTitle = watch("title");
+  const reactiveDescription = watch("description");
+  const reactiveArtwork = watch("releaseArtwork");
+  const reactiveTracklist = watch("tracklist");
+
+  const detailsValid = () => {
+    const artworkValid = Object.values(reactiveArtwork).every((item) => item);
+
+    if (!!reactiveTitle && !!reactiveDescription && artworkValid) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  const tracklistValid = () => {
+    const isValid =
+      reactiveTracklist.length > 0
+        ? reactiveTracklist.every((track, index) => {
+            const isTrackValid = trackValid(index);
+
+            return isTrackValid;
+          })
+        : false;
+
+    return isValid;
+  };
+
+  // validate track by required props - should automate as list grows
+  const trackValid = (index: number) => {
+    const title = watch("tracklist")[index].metadata.title;
+    const description = watch("tracklist")[index].metadata.description;
+    const artwork = watch("tracklist")[index].metadata.artwork;
+
+    const artworkValid = artwork
+      ? Object.values(artwork).every((item) => item)
+      : false;
+
+    if (!!title && !!description && artworkValid) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    console.log("formState changed");
+    const detailsStatus = checkRequiredValues([
+      "title",
+      "description",
+      "releaseArtwork",
+    ]);
+
+    setDetailsValidStatus(detailsStatus);
+  }, [reactiveTitle, reactiveDescription, reactiveArtwork.file]);
+
+  useEffect(() => {
+    if (reactiveArtwork.url) {
+      setReleaseArtwork(reactiveArtwork.url);
+    }
+  }, [reactiveArtwork]);
+
+  useEffect(() => {
+    if (reactiveTracklist && reactiveTracklist.length >= 1) {
+      console.log(reactiveTracklist);
+      const tracklistStatus = checkRequiredValues(["tracklist"]);
+      setTracklistValidStatus(tracklistStatus);
+    }
+  }, [reactiveTracklist]);
+
   const handleNext = async () => {
     const fields = formTabs[currentTab as keyof FormTabs].fields;
     const output = await trigger(fields as FieldName[], { shouldFocus: true });
 
     console.log(form.getValues());
-
-    await handleSubmit((data) => console.log(data))();
 
     try {
       const result = uploadSchema.parse(getValues());
@@ -142,6 +252,8 @@ export const Upload = () => {
     } catch (error) {
       console.error(error);
     }
+
+    console.log(errors);
 
     // if (!result.success) {
     //   console.log(result.error);
@@ -153,54 +265,15 @@ export const Upload = () => {
 
     if (currentTab === "details") {
       setCurrentTab("tracklist");
-    } else if (currentTab === "tracklist") {
+    }
+    if (currentTab === "tracklist") {
       setCurrentTab("review");
-    } else {
-      await handleSubmit((data) => console.log(data))();
     }
   };
 
-  const onImageDrop = useCallback((acceptedFiles: File[]) => {
-    // Do something with the files
-    const imageFile = acceptedFiles[0];
-
-    console.log(imageFile);
-
-    const reader = new FileReader();
-
-    reader.onabort = () => console.log("file reading was aborted");
-    reader.onerror = () => console.log("file reading has failed");
-
-    reader.onload = () => {
-      let blob;
-      let url;
-      blob = new Blob([imageFile], { type: imageFile.type });
-      url = window.URL.createObjectURL(blob);
-
-      let imageFileInfo = {
-        name: imageFile.name,
-        size: imageFile.size,
-        type: imageFile.type,
-        url,
-      };
-
-      console.log(reader.result);
-
-      setReleaseArtwork(url);
-      setValue("releaseArtwork.file", imageFileInfo);
-      setValue("releaseArtwork.data", reader.result as ArrayBuffer);
-    };
-
-    reader.readAsArrayBuffer(imageFile);
-  }, []);
-
-  const image = useDropzone({
-    accept: { "image/*": [".jpeg", ".png", ".webp", ".avif"] },
-    maxFiles: 1,
-    onDrop: onImageDrop,
-  });
-
   const onAudioDrop = useCallback(async (acceptedFiles: File[]) => {
+    const tracks: Track[] = [];
+
     for (let i = 0; i < acceptedFiles.length; i++) {
       const file = acceptedFiles[i];
 
@@ -221,24 +294,16 @@ export const Upload = () => {
             url = window.URL.createObjectURL(blob);
 
             const track: Track = {
-              file: {
-                name: file.name,
-                size: file.size,
-                type: file.type,
-                url,
-              },
-              data: reader.result as ArrayBuffer,
+              file,
+              url,
+              // data: reader.result as ArrayBuffer,
               metadata: {
                 title: file.name,
                 description: "",
                 artwork: {
-                  data: form.getValues("releaseArtwork.data"),
-                  file: {
-                    name: "",
-                    size: 0,
-                    type: "",
-                    url: form.getValues("releaseArtwork.file.url"),
-                  },
+                  // data: form.getValues("releaseArtwork.data"),
+                  file: form.getValues("releaseArtwork.file"),
+                  url: form.getValues("releaseArtwork.url"),
                 },
               },
             };
@@ -250,11 +315,36 @@ export const Upload = () => {
           };
         });
 
-        append(track);
+        tracks.push(track);
       } catch (error) {
         console.error("Unsupported file type.");
       }
     }
+
+    /* 
+    - we could re-implement tracks array but map
+    through and append
+    - advantage here is that we can detect a single track and instead of using the file name, use the release title for track title
+    */
+    const tracklistLength = watch("tracklist").length;
+    const totalTrackLength = tracks.length + tracklistLength;
+
+    tracks.forEach((track) => {
+      if (totalTrackLength <= 1) {
+        append({
+          // data: track.data,
+          file: track.file,
+          url: track.url,
+          metadata: {
+            title: form.getValues("title"),
+            description: form.getValues("description"),
+            artwork: form.getValues("releaseArtwork"),
+          },
+        });
+      } else {
+        append(track);
+      }
+    });
   }, []);
 
   const audio = useDropzone({
@@ -275,12 +365,20 @@ export const Upload = () => {
     setShowDetailsDialog({ open: false, index });
 
   const isAlbum =
-    //@ts-ignore
     !!form.getValues("tracklist") && form.getValues("tracklist").length > 1;
 
   const tracks =
-    //@ts-ignore
     form.getValues("tracklist") && form.getValues("tracklist").length;
+
+  const onSubmit = async (data: UploadSchema) => {
+    try {
+      await upload(data, walletAddress);
+      toast.success("Tracks successfully uploaded!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Upload error. Please try again.");
+    }
+  };
 
   return (
     <Fullscreen>
@@ -293,315 +391,392 @@ export const Upload = () => {
           <Typography contrast="hi">radar</Typography>
           <Button variant="transparent">connect wallet</Button>
         </Flex>
-        <Container
-          css={{
-            pb: 120,
-          }}
-          as="form"
-          onSubmit={handleSubmit((data) => console.log(data))}
-        >
-          <Tabs
-            onValueChange={(e) => {
-              setCurrentTab(e as CurrentTab);
+        <FormProvider {...form}>
+          <Container
+            css={{
+              pb: 120,
             }}
-            css={{ width: "100%" }}
-            defaultValue={currentTab}
-            value={currentTab}
+            as="form"
+            onSubmit={handleSubmit(onSubmit)}
           >
-            <TabsList>
-              <TabsTrigger value="details">Release details</TabsTrigger>
-              <TabsTrigger value="tracklist">Tracklist</TabsTrigger>
-              <TabsTrigger value="review">Review</TabsTrigger>
-            </TabsList>
-            <TabsContent value="details">
-              <Flex gap="20">
-                <Flex css={{ flex: 1 }} direction="column">
-                  <FormRow>
-                    <Label htmlFor="title">Title</Label>
-                    <TextField
-                      id="title"
-                      type="text"
-                      placeholder="Release Title"
-                      {...register("title")}
-                    />
-                    {errors.title && (
-                      <FormHelperError>{errors.title.message}</FormHelperError>
-                    )}
-                  </FormRow>
-                  <FormRow>
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      size="3"
-                      id="description"
-                      placeholder="Release Description"
-                      {...register("description")}
-                    />
-                    {errors.description && (
-                      <FormHelperError>
-                        {errors.description.message}
-                      </FormHelperError>
-                    )}
-                  </FormRow>
-                  <FormRow>
-                    <Label htmlFor="genre">Genre</Label>
-                    <Select
-                      defaultValue={getValues("genre")}
-                      {...register("genre")}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                        <SelectIcon>
-                          <RxChevronDown />
-                        </SelectIcon>
-                      </SelectTrigger>
-                      <SelectPortal>
-                        <SelectContent sideOffset={8}>
-                          <SelectViewport>
-                            {genres.map((genre) => (
-                              <SelectItem key={genre} value={genre}>
-                                {genre}
-                              </SelectItem>
-                            ))}
-                          </SelectViewport>
-                        </SelectContent>
-                      </SelectPortal>
-                    </Select>
-                  </FormRow>
-                  <FormRow>
-                    <Label htmlFor="releaseDate">Release Date (optional)</Label>
-                    <TextField
-                      id="releaseDate"
-                      type="date"
-                      placeholder="Release Date"
-                      {...register("releaseDate")}
-                    />
-                    {errors.releaseDate && (
-                      <FormHelperError>
-                        {errors.releaseDate.message}
-                      </FormHelperError>
-                    )}
-                  </FormRow>
-                </Flex>
-                <FormRow
-                  css={{
-                    height: "max-content",
-                  }}
+            <Tabs
+              onValueChange={(e) => {
+                setCurrentTab(e as CurrentTab);
+              }}
+              css={{ width: "100%" }}
+              defaultValue={currentTab}
+              value={currentTab}
+            >
+              <TabsList>
+                <TabsTrigger value="details">Release details</TabsTrigger>
+                <TabsTrigger disabled={!detailsValid()} value="tracklist">
+                  Tracklist
+                </TabsTrigger>
+                <TabsTrigger
+                  disabled={!detailsValid() || !tracklistValid()}
+                  value="review"
                 >
-                  <Label htmlFor="releaseArtwork">Cover Art</Label>
-                  <ImageDropContainer
+                  Review
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="details">
+                <Flex gap="20">
+                  <Flex css={{ flex: 1 }} direction="column">
+                    <FormRow>
+                      <Label htmlFor="title">Title</Label>
+                      <TextField
+                        id="title"
+                        type="text"
+                        placeholder="Release Title"
+                        {...register("title")}
+                        size="3"
+                      />
+                      {errors.title && reactiveTitle.length < 1 && (
+                        <FormHelperError>
+                          {errors.title.message}
+                        </FormHelperError>
+                      )}
+                    </FormRow>
+                    <FormRow>
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea
+                        size="3"
+                        id="description"
+                        placeholder="Release Description"
+                        {...register("description")}
+                      />
+                      {errors.description && reactiveDescription.length < 1 && (
+                        <FormHelperError>
+                          {errors.description.message}
+                        </FormHelperError>
+                      )}
+                    </FormRow>
+                    <FormRow>
+                      <Label htmlFor="genre">Genre</Label>
+                      <Select
+                        defaultValue={getValues("genre")}
+                        {...register("genre")}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                          <SelectIcon>
+                            <RxChevronDown />
+                          </SelectIcon>
+                        </SelectTrigger>
+                        <SelectPortal>
+                          <SelectContent sideOffset={8}>
+                            <SelectViewport>
+                              {genres.map((genre) => (
+                                <SelectItem key={genre} value={genre}>
+                                  {genre}
+                                </SelectItem>
+                              ))}
+                            </SelectViewport>
+                          </SelectContent>
+                        </SelectPortal>
+                      </Select>
+                    </FormRow>
+                    <FormRow>
+                      <Label htmlFor="releaseDate">
+                        Release Date (optional)
+                      </Label>
+                      <TextField
+                        id="releaseDate"
+                        type="date"
+                        placeholder="Release Date"
+                        {...register("releaseDate")}
+                      />
+                      {errors.releaseDate && (
+                        <FormHelperError>
+                          {errors.releaseDate.message}
+                        </FormHelperError>
+                      )}
+                    </FormRow>
+                  </Flex>
+                  <FormRow
                     css={{
-                      background: releaseArtwork
-                        ? `url(${releaseArtwork})`
-                        : "transparent",
-
-                      mb: "$15",
+                      height: "max-content",
                     }}
-                    hidden={!!releaseArtwork}
-                    hovered={image.isDragActive}
-                    size="3"
-                    {...image.getRootProps()}
                   >
-                    <input {...image.getInputProps()} />
-                    <RxPlus />
-                    <Typography
-                      size="1"
-                      css={{
-                        position: "absolute",
-                        bottom: "$5",
-                        textAlign: "center",
-                      }}
+                    <Label htmlFor="releaseArtwork">Cover Art</Label>
+                    <ImageDropzone
+                      name="releaseArtwork.file"
+                      hidden={!!reactiveArtwork?.url}
+                      size="3"
                     >
-                      Drag and drop your cover art <br /> or click to browse
-                    </Typography>
-                    {releaseArtwork && (
-                      <IconButton
-                        onClick={handleRemoveCoverArt}
+                      <RxPlus />
+                      <Typography
                         size="1"
                         css={{
-                          br: "$round",
-                          backgroundColor: "$whiteA11",
-                          color: "$blackA12",
                           position: "absolute",
-                          top: "-$2",
-                          right: "-$2",
-
-                          "&:hover": {
-                            backgroundColor: "$whiteA12",
-                          },
-
-                          "& svg": {
-                            display: "block",
-                            width: "$5",
-                            height: "$5",
-                          },
+                          bottom: "$5",
+                          textAlign: "center",
                         }}
                       >
-                        <RxTrash />
-                      </IconButton>
-                    )}
-                  </ImageDropContainer>
-                  {errors.releaseArtwork?.data ? (
-                    <FormHelperError>
-                      {errors.releaseArtwork.data.message}
-                    </FormHelperError>
-                  ) : (
-                    <FormHelperText
-                    // css={{ position: "relative" }}
-                    >
-                      Cover art must be .jpg, .png, .webp or .avif <br />
-                      - Recommended size 2000x2000 <br />- Ensure you have
-                      rights to the image you choose
-                    </FormHelperText>
-                  )}
-                </FormRow>
-              </Flex>
-            </TabsContent>
-            <TabsContent value="tracklist">
-              <Container
-                css={{
-                  maxWidth: 700,
-                }}
-              >
-                <Flex
-                  css={{ mx: "auto", mt: "$10", width: "100%" }}
-                  direction="column"
-                  align="center"
-                  gap="10"
-                >
-                  <AudioDropContainer {...audio.getRootProps()}>
-                    <input {...audio.getInputProps()} />
-                    <Flex gap="5" align="center">
-                      <Flex direction="column" align="center">
-                        <Typography css={{ color: "$slate12" }}>
-                          Drag your songs here
-                        </Typography>
-                        <Typography size="1">
-                          .mp3, .wav, .flac, .aiff
-                        </Typography>
-                      </Flex>
-                      <Typography>or</Typography>
-                      <Typography css={{ color: "$violet11" }}>
-                        Browse your computer
+                        Drag and drop your cover art <br /> or click to browse
                       </Typography>
-                    </Flex>
-                  </AudioDropContainer>
-                  {/* {form.formState.errors.tracklist && (
-          <FormHelperErrorText>
-            {form.formState.errors.tracklist.message}
-          </FormHelperErrorText>
-        )} */}
-                  {/* {tracklist && tracklist.length && ( */}
-                  <Flex css={{ width: "100%" }} direction="column" gap="3">
-                    {fields.map((track, index) => (
-                      <Flex
-                        key={track.id}
-                        css={{
-                          backgroundColor: "$slate2",
-                          width: "100%",
-                          py: "$5",
-                          pr: "$3",
-                          pl: "$7",
-                          br: "$1",
-                        }}
-                        justify="between"
-                        align="center"
-                      >
-                        <Typography>{track.file.name}</Typography>
-                        <Flex>
-                          <Button
-                            onClick={() => handleShowDetailsDialog(index)}
-                            variant="transparent"
-                            size="1"
-                          >
-                            Edit track details
-                          </Button>
-                          <Button
+
+                      {reactiveArtwork.url && (
+                        <>
+                          <Image
                             css={{
-                              color: "$red10",
+                              width: "100%",
+                              height: "100%",
+                              position: "absolute",
+                              inset: 0,
+                            }}
+                            src={reactiveArtwork.url}
+                          />
+                          <IconButton
+                            onClick={handleRemoveCoverArt}
+                            size="1"
+                            css={{
+                              br: "$round",
+                              backgroundColor: "$slate12",
+                              color: "$blackA12",
+                              position: "absolute",
+                              top: "-$2",
+                              right: "-$2",
 
                               "&:hover": {
-                                color: "$red11",
+                                backgroundColor: "$slateSolidHover",
+                              },
+
+                              "& svg": {
+                                display: "block",
+                                width: "$5",
+                                height: "$5",
                               },
                             }}
-                            onClick={() => remove(index)}
-                            variant="transparent"
-                            size="1"
                           >
-                            Delete
-                          </Button>
-                        </Flex>
+                            <RxTrash />
+                          </IconButton>
+                        </>
+                      )}
+                    </ImageDropzone>
+                    <Flex direction="column" gap="3">
+                      <FormHelperText css={{ position: "relative" }}>
+                        Cover art must be .jpg, .png, .webp or .avif <br />
+                        - Recommended size 2000x2000 <br />- Ensure you have
+                        rights to the image you choose
+                      </FormHelperText>
+                      {errors.releaseArtwork && !reactiveArtwork.file && (
+                        <FormHelperError
+                          css={{
+                            position: "relative",
+                          }}
+                        >
+                          {errors.releaseArtwork.file?.message}
+                        </FormHelperError>
+                      )}
+                    </Flex>
+                  </FormRow>
+                </Flex>
+              </TabsContent>
+              <TabsContent value="tracklist">
+                <Container
+                  css={
+                    {
+                      // maxWidth: 700,
+                    }
+                  }
+                >
+                  <Flex
+                    css={{ mx: "auto", mt: "$10", width: "100%" }}
+                    direction="column"
+                    align="center"
+                    gap="10"
+                  >
+                    <Flex css={{ width: "100%" }} direction="column">
+                      {fields.map((track, index) => (
+                        <Flex
+                          key={track.id}
+                          css={{
+                            position: "relative",
+                            width: "100%",
+                            py: "$5",
+                            pr: "$10",
+                            pl: "$7",
+                            // br: "$3",
 
-                        <DetailsDialog
-                          track={track}
-                          form={form}
-                          index={index}
-                          open={
-                            showDetailsDialog.open &&
-                            index === showDetailsDialog.index
-                          }
-                          onClose={() => handleCancelDetailsDialog(index)}
-                        />
+                            "&:hover": {
+                              backgroundColor: "$slate2",
+                            },
+                          }}
+                          justify="between"
+                          align="center"
+                        >
+                          <Flex align="center" gap="5">
+                            <Image
+                              src={
+                                form.getValues("tracklist")[index].metadata
+                                  .artwork?.url
+                              }
+                              css={{
+                                width: 40,
+                                height: 40,
+                              }}
+                            />
+                            <Typography>{track.metadata.title}</Typography>
+                          </Flex>
+                          <Flex align="center" gap="1">
+                            <IconButton
+                              aria-label="Edit track details"
+                              type="button"
+                              onClick={() => handleShowDetailsDialog(index)}
+                              variant="ghost"
+                              size="2"
+                            >
+                              <RxPencil2 />
+                            </IconButton>
+                            <IconButton
+                              aria-label="Delete track from release"
+                              type="button"
+                              css={{
+                                color: "$red10",
+
+                                "&:hover": {
+                                  backgroundColor: "$red4",
+                                  color: "$red11",
+                                },
+
+                                "&:active": {
+                                  backgroundColor: "$red5",
+                                  // color: "$red11",
+                                },
+                              }}
+                              onClick={() => remove(index)}
+                              variant="ghost"
+                              size="2"
+                            >
+                              <RxTrash />
+                            </IconButton>
+
+                            {errors.tracklist &&
+                              errors.tracklist[index] &&
+                              !trackValid(index) && (
+                                <IconButton
+                                  variant="transparent"
+                                  as="span"
+                                  css={{
+                                    color: "$red10",
+                                    position: "absolute",
+                                    right: "$2",
+
+                                    "&:hover": {
+                                      color: "$red10",
+                                    },
+                                  }}
+                                >
+                                  <BsFillExclamationCircleFill aria-label="Track contains errors" />
+                                </IconButton>
+                              )}
+                          </Flex>
+
+                          <DetailsDialog
+                            track={track}
+                            form={form}
+                            index={index}
+                            open={
+                              showDetailsDialog.open &&
+                              index === showDetailsDialog.index
+                            }
+                            onClose={() => handleCancelDetailsDialog(index)}
+                          />
+                        </Flex>
+                      ))}
+                    </Flex>
+                    <AudioDropContainer {...audio.getRootProps()}>
+                      <input {...audio.getInputProps()} />
+                      <Flex gap="5" align="center">
+                        <Flex direction="column" align="center">
+                          <Typography css={{ color: "$slate12" }}>
+                            Drag your songs here
+                          </Typography>
+                          <Typography size="1">
+                            .mp3, .wav, .flac, .aiff
+                          </Typography>
+                        </Flex>
+                        <Typography>or</Typography>
+                        <Typography css={{ color: "$violet11" }}>
+                          Browse your computer
+                        </Typography>
                       </Flex>
-                    ))}
-                  </Flex>
-                </Flex>
-              </Container>
-            </TabsContent>
-            <TabsContent value="review">
-              <Typography css={{ mt: "$10" }} as="h3" size="5" contrast="hi">
-                Review
-              </Typography>
-              <Flex css={{ mt: "$10" }} justify="between" gap="20">
-                <Flex css={{ flex: 1 }} direction="column" gap="10">
-                  <Box>
-                    <Typography size="4" contrast="hi">
-                      {getValues("title")}
-                    </Typography>
-                    {isAlbum ? (
-                      <Typography>Album release, {tracks} tracks</Typography>
-                    ) : (
-                      <Typography>Single release, {tracks} track</Typography>
+                    </AudioDropContainer>
+                    {errors.tracklist && fields.length <= 0 && (
+                      <FormHelperError
+                        css={{
+                          position: "relative",
+                        }}
+                      >
+                        {errors.tracklist.message}
+                      </FormHelperError>
                     )}
-                  </Box>
-                  <Box>
-                    <Typography>Release Description</Typography>
-                    <Typography contrast="hi">
-                      {getValues("description")}
-                    </Typography>
-                  </Box>
-                  {walletAddress ? (
-                    <Button type="submit" css={{ mt: "auto" }} variant="solid">
-                      Submit
-                    </Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      onClick={() =>
-                        connect([
-                          "ACCESS_ADDRESS",
-                          "ACCESS_PUBLIC_KEY",
-                          "SIGNATURE",
-                          "SIGN_TRANSACTION",
-                        ])
-                      }
-                      css={{ mt: "auto" }}
-                      variant="solid"
-                    >
-                      Connect to submit
-                    </Button>
-                  )}
+                  </Flex>
+                </Container>
+              </TabsContent>
+              <TabsContent value="review">
+                <Typography css={{ mt: "$10" }} as="h3" size="5" contrast="hi">
+                  Review
+                </Typography>
+                <Flex css={{ mt: "$10" }} justify="between" gap="20">
+                  <Flex css={{ flex: 1 }} direction="column" gap="10">
+                    <Box>
+                      <Typography size="4" contrast="hi">
+                        {getValues("title")}
+                      </Typography>
+                      {isAlbum ? (
+                        <Typography>Album release, {tracks} tracks</Typography>
+                      ) : (
+                        <Typography>Single release, {tracks} track</Typography>
+                      )}
+                    </Box>
+                    <Box>
+                      <Typography>Release Description</Typography>
+                      <Typography contrast="hi">
+                        {getValues("description")}
+                      </Typography>
+                    </Box>
+                    {walletAddress ? (
+                      <Button
+                        size="3"
+                        type="submit"
+                        css={{ mt: "auto" }}
+                        variant="solid"
+                      >
+                        Submit
+                      </Button>
+                    ) : (
+                      <Button
+                        size="3"
+                        type="button"
+                        onClick={() =>
+                          connect([
+                            "ACCESS_ADDRESS",
+                            "ACCESS_PUBLIC_KEY",
+                            "SIGNATURE",
+                            "SIGN_TRANSACTION",
+                          ])
+                        }
+                        css={{ mt: "auto" }}
+                        variant="solid"
+                      >
+                        Connect to submit
+                      </Button>
+                    )}
+                  </Flex>
+                  <Image
+                    css={{
+                      width: 400,
+                      height: 400,
+                    }}
+                    src={getValues("releaseArtwork.url")}
+                  />
                 </Flex>
-                <Image
-                  css={{
-                    width: 400,
-                    height: 400,
-                  }}
-                  src={getValues("releaseArtwork.file.url")}
-                />
-              </Flex>
-            </TabsContent>
-          </Tabs>
-        </Container>
+              </TabsContent>
+            </Tabs>
+          </Container>
+        </FormProvider>
       </Flex>
       <Box
         css={{
@@ -628,6 +803,7 @@ export const Upload = () => {
           )}
           {currentTab !== "review" && (
             <Button
+              // disabled={!detailsValidStatus}
               onClick={handleNext}
               variant="solid"
               css={{ alignSelf: "end" }}

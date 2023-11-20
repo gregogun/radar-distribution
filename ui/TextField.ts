@@ -23,7 +23,7 @@ export const TextField = styled("input", {
   backgroundColor: "transparent",
   minWidth: 200,
   br: "$1",
-  px: "$4",
+  px: "$3",
   color: "$slate12",
 
   "&::placeholder": {
@@ -63,7 +63,7 @@ export const TextField = styled("input", {
         lineHeight: "$sizes$9",
       },
       3: {
-        fontSize: "$4",
+        fontSize: "$3",
         lineHeight: "$sizes$11",
       },
     },

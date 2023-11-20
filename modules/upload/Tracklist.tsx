@@ -101,6 +101,7 @@ export const Tracklist = () =>
 
               const track: Track = {
                 file: {
+                  data: file,
                   name: file.name,
                   size: file.size,
                   type: file.type,
@@ -111,8 +112,9 @@ export const Tracklist = () =>
                   title: "",
                   description: "",
                   artwork: {
-                    data: "" as any,
+                    data: form.getValues("releaseArtwork.data"),
                     file: {
+                      data: form.getValues("releaseArtwork.file.data"),
                       name: "",
                       size: 0,
                       type: "",

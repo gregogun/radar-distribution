@@ -1,4 +1,8 @@
-import { styled } from "@/stitches.config";
+import { VariantProps, styled } from "@/stitches.config";
+
+export type ImageDropContainerVariants = VariantProps<
+  typeof ImageDropContainer
+>;
 
 export const ImageDropContainer = styled("div", {
   display: "flex",
@@ -9,9 +13,9 @@ export const ImageDropContainer = styled("div", {
   cursor: "pointer",
   border: "2px dashed $colors$slate6",
   position: "relative",
-  backgroundSize: "cover",
+  backgroundSize: "contain",
   backgroundRepeat: "no-repeat",
-  backgroundPosition: "center",
+  backgroundPosition: "center center",
 
   "&:hover": {
     border: "2px dashed $colors$slate7",
@@ -58,6 +62,10 @@ export const ImageDropContainer = styled("div", {
 
         "&:hover": {
           border: "none",
+
+          "& img": {
+            opacity: 0.7,
+          },
         },
         "& svg": {
           display: "none",

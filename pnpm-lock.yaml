@@ -33,6 +33,7 @@ specifiers:
   react-hook-form: 7.47.0
   react-icons: 4.7.1
   react-router-dom: 6.11.2
+  sonner: 1.1.0
   typescript: 4.7.4
   warp-contracts: 1.4.19
   zod: 3.22.4
@@ -64,6 +65,7 @@ dependencies:
   react-hook-form: 7.47.0_react@18.2.0
   react-icons: 4.7.1_react@18.2.0
   react-router-dom: 6.11.2_biqbaboplfbrettd7655fr4n2y
+  sonner: 1.1.0_biqbaboplfbrettd7655fr4n2y
   warp-contracts: 1.4.19
   zod: 3.22.4
 
@@ -5001,6 +5003,16 @@ packages:
     resolution: {integrity: sha512-3dOsAHXXUkQTpOYcoAxLIorMTp4gIQr5IW3iVb7A7lFIp0VHhnynm9izx6TssdrIcVIESAlVjtnO2K8bg+Coew==}
     engines: {node: '>=12'}
     dev: true
+
+  /sonner/1.1.0_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-pqc5yd1ekS6dBXLKljRogqatiGJSxCaX8mspnqKjLg5Rzw6eiAUgsG1SS8RuQzOjQq8/MlgFao6sIw9doqAkNg==}
+    peerDependencies:
+      react: ^18.0.0
+      react-dom: ^18.0.0
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    dev: false
 
   /source-map-js/1.0.2:
     resolution: {integrity: sha512-R0XvVJ9WusLiqTCEiGCmICCMplcCkIwwR11mOSD9CR5u+IXYdiseeEuXCVAjS54zqwkLcPNnmU4OeJ6tUrWhDw==}

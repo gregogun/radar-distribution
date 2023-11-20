@@ -2,6 +2,17 @@ import { styled } from "@/stitches.config";
 
 export const Image = styled("img", {
   variants: {
+    fit: {
+      contain: {
+        objectFit: "contain",
+      },
+      cover: {
+        objectFit: "cover",
+      },
+      fill: {
+        objectFit: "fill",
+      },
+    },
     size: {
       1: {
         width: 16,
@@ -16,5 +27,9 @@ export const Image = styled("img", {
         height: 28,
       },
     },
+  },
+
+  defaultVariants: {
+    fit: "cover",
   },
 });

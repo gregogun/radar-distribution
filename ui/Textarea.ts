@@ -58,17 +58,17 @@ export const Textarea = styled("textarea", {
       1: {
         height: "$7",
         fontSize: "$1",
-        lineHeight: "$sizes$7",
+        lineHeight: "$1",
       },
       2: {
         height: "$10",
         fontSize: "$2",
-        lineHeight: "$sizes$10",
+        lineHeight: "$2",
       },
       3: {
         height: 80,
         fontSize: "$3",
-        lineHeight: "$sizes$35",
+        lineHeight: "$3",
       },
     },
     variant: {
