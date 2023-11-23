@@ -4,45 +4,25 @@ import { Typography } from "@/ui/Typography";
 import { Box } from "@/ui/Box";
 import { styled } from "@/stitches.config";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/Tabs";
-import {
-  Select,
-  SelectContent,
-  SelectIcon,
-  SelectItem,
-  SelectPortal,
-  SelectTrigger,
-  SelectValue,
-  SelectViewport,
-} from "@/ui/Select";
 import { Label } from "@/ui/Label";
+import { RxPencil2, RxPlus, RxTrash } from "react-icons/rx";
 import {
-  RxChevronDown,
-  RxExclamationTriangle,
-  RxPencil2,
-  RxPlus,
-  RxTrash,
-} from "react-icons/rx";
-import { BsFillExclamationCircleFill } from "react-icons/bs";
+  BsFillExclamationCircleFill,
+  BsPauseFill,
+  BsPlayFill,
+} from "react-icons/bs";
 import { Track, UploadSchema, uploadSchema } from "./schema";
 import { TextField } from "@/ui/TextField";
 import { Textarea } from "@/ui/Textarea";
 import { genres } from "@/data/genres";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { IconButton } from "@/ui/IconButton";
-import { Tracklist } from "./Tracklist";
 import { Container } from "@/ui/Container";
 import { FormHelperError, FormHelperText, FormRow } from "@/ui/Form";
-import { useDynamicForm } from "@/hooks/useDynamicForm";
-import {
-  Controller,
-  FormProvider,
-  useFieldArray,
-  useForm,
-} from "react-hook-form";
+import { FormProvider, useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DetailsDialog } from "./DetailsDialog";
-import { ImageDropContainer } from "./components/ImageDropContainer";
 import { Image } from "@/ui/Image";
 import { useWallet } from "@/hooks/useWallet";
 import { upload } from "@/lib/upload";
@@ -111,6 +91,10 @@ export const Upload = () => {
   });
   const [currentTab, setCurrentTab] = useState<CurrentTab>("details");
   const { walletAddress, connect } = useWallet();
+  const audioRef = useRef<(HTMLAudioElement | null)[]>([]);
+  const [currentlyPlayingIndex, setCurrentlyPlayingIndex] = useState<
+    null | number
+  >(null);
 
   const form = useForm<UploadSchema>({
     resolver: zodResolver(uploadSchema),
@@ -161,26 +145,6 @@ export const Upload = () => {
     if (currentTab === "review") {
       setCurrentTab("monetization");
     }
-  };
-
-  // used to dynamically enable/disable tabs based on validity of fields in each stepv
-  const checkRequiredValues = (values: any[]): boolean => {
-    const hasRequiredValues = values.every((field) => {
-      const values = getValues(field);
-
-      console.log(values);
-
-      if (typeof values === "object") {
-        console.log("artwork values:", values);
-        const artworkValid = Object.values(values).every((item) => item);
-        console.log(artworkValid);
-        return artworkValid;
-      }
-
-      return values;
-    });
-
-    return hasRequiredValues;
   };
 
   const reactiveTitle = watch("title");
@@ -369,6 +333,27 @@ export const Upload = () => {
     } catch (error) {
       console.error(error);
       toast.error("Upload error. Please try again.");
+    }
+  };
+
+  const handlePlayPause = (trackIndex: number) => {
+    if (
+      currentlyPlayingIndex !== null &&
+      audioRef.current[currentlyPlayingIndex]
+    ) {
+      // Pause currently playing track
+      audioRef.current[currentlyPlayingIndex]?.pause();
+    }
+
+    if (currentlyPlayingIndex === trackIndex) {
+      // If the clicked track is the currently playing track, just toggle its play state
+      setCurrentlyPlayingIndex(null);
+    } else {
+      // Else, play the new track
+      if (audioRef.current[trackIndex]) {
+        audioRef.current[trackIndex]?.play();
+        setCurrentlyPlayingIndex(trackIndex);
+      }
     }
   };
 
@@ -594,6 +579,24 @@ export const Upload = () => {
                           align="center"
                         >
                           <Flex align="center" gap="5">
+                            <IconButton
+                              type="button"
+                              aria-label="Play/pause file"
+                              variant="ghost"
+                              size="3"
+                              onClick={() => handlePlayPause(index)}
+                            >
+                              {currentlyPlayingIndex === index ? (
+                                <BsPauseFill />
+                              ) : (
+                                <BsPlayFill />
+                              )}
+                            </IconButton>
+                            <audio
+                              ref={(el) => (audioRef.current[index] = el)}
+                              onEnded={() => setCurrentlyPlayingIndex(null)}
+                              src={track.url}
+                            ></audio>
                             <Image
                               src={
                                 form.getValues("tracklist")[index].metadata
