@@ -73,6 +73,5 @@ export const uploadSchema = z.object({
   releaseArtwork: artworkSchema,
   tracklist: z.array(trackSchema).min(1, "At least 1 track is required"),
   license: licenseSchema,
-  // licenseType: z.enum(["none", "UDL"]).default("none"),
-  // udlMetadata: udlMetadataSchema,
+  tokenQuantity: z.number().min(1).max(100),
 });

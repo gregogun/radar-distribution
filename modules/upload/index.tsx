@@ -51,6 +51,7 @@ import { ImageDropzone } from "./components/Dropzone";
 import { FormSelect } from "./components/FormSelect";
 import { udl } from "@/data/license";
 import { ControlGroup } from "@/ui/ControlGroup";
+import { formatSchemaValue } from "@/utils";
 
 const AudioDropContainer = styled("div", {
   display: "flex",
@@ -79,6 +80,21 @@ const Fullscreen = styled("div", {
   position: "relative",
 });
 
+const formTabs: { [key: string]: Tab } = {
+  details: {
+    name: "details",
+    fields: ["title", "description", "releaseArtwork", "genre", "releaseDate"],
+  },
+  tracklist: {
+    name: "tracklist",
+    fields: ["tracklist"],
+  },
+  monetization: {
+    name: "monetization",
+    fields: ["tokenQuantity", "license"],
+  },
+};
+
 type FieldName = keyof UploadSchema;
 
 type Tab = {
@@ -86,44 +102,21 @@ type Tab = {
   fields: FieldName[];
 };
 
-type CurrentTab = "details" | "tracklist" | "review";
-
-type FormTabs = {
-  details: Tab;
-  tracklist: Tab;
-};
+type CurrentTab = "details" | "tracklist" | "monetization" | "review";
 
 export const Upload = () => {
-  const [releaseArtwork, setReleaseArtwork] = useState<string>();
   const [showDetailsDialog, setShowDetailsDialog] = useState({
     open: false,
     index: 0,
   });
-  const [detailsValidStatus, setDetailsValidStatus] = useState(false);
-  const [tracklistValidStatus, setTracklistValidStatus] = useState(false);
   const [currentTab, setCurrentTab] = useState<CurrentTab>("details");
-  const [formTabs, setFormTabs] = useState<FormTabs>({
-    details: {
-      name: "details",
-      fields: [
-        "title",
-        "description",
-        "releaseArtwork",
-        "genre",
-        "releaseDate",
-      ],
-    },
-    tracklist: {
-      name: "tracklist",
-      fields: ["tracklist"],
-    },
-  });
   const { walletAddress, connect } = useWallet();
 
   const form = useForm<UploadSchema>({
     resolver: zodResolver(uploadSchema),
     defaultValues: {
       genre: "none",
+      tokenQuantity: 100,
       license: {
         type: "public-use",
         derivation: "with-credit",
@@ -141,7 +134,6 @@ export const Upload = () => {
     },
   });
 
-  // const { form } = useDynamicForm();
   const {
     getValues,
     trigger,
@@ -163,8 +155,11 @@ export const Upload = () => {
     if (currentTab === "tracklist") {
       setCurrentTab("details");
     }
-    if (currentTab === "review") {
+    if (currentTab === "monetization") {
       setCurrentTab("tracklist");
+    }
+    if (currentTab === "review") {
+      setCurrentTab("monetization");
     }
   };
 
@@ -233,33 +228,8 @@ export const Upload = () => {
     }
   };
 
-  useEffect(() => {
-    console.log("formState changed");
-    const detailsStatus = checkRequiredValues([
-      "title",
-      "description",
-      "releaseArtwork",
-    ]);
-
-    setDetailsValidStatus(detailsStatus);
-  }, [reactiveTitle, reactiveDescription, reactiveArtwork.file]);
-
-  useEffect(() => {
-    if (reactiveArtwork.url) {
-      setReleaseArtwork(reactiveArtwork.url);
-    }
-  }, [reactiveArtwork]);
-
-  useEffect(() => {
-    if (reactiveTracklist && reactiveTracklist.length >= 1) {
-      console.log(reactiveTracklist);
-      const tracklistStatus = checkRequiredValues(["tracklist"]);
-      setTracklistValidStatus(tracklistStatus);
-    }
-  }, [reactiveTracklist]);
-
   const handleNext = async () => {
-    const fields = formTabs[currentTab as keyof FormTabs].fields;
+    const fields = formTabs[currentTab as keyof typeof formTabs].fields;
     const output = await trigger(fields as FieldName[], { shouldFocus: true });
 
     console.log(form.getValues());
@@ -285,6 +255,9 @@ export const Upload = () => {
       setCurrentTab("tracklist");
     }
     if (currentTab === "tracklist") {
+      setCurrentTab("monetization");
+    }
+    if (currentTab === "monetization") {
       setCurrentTab("review");
     }
   };
@@ -376,7 +349,6 @@ export const Upload = () => {
     e.stopPropagation();
 
     resetField("releaseArtwork");
-    setReleaseArtwork(undefined);
   };
 
   const handleShowDetailsDialog = (index: number) =>
@@ -431,6 +403,12 @@ export const Upload = () => {
                 <TabsTrigger value="details">Release details</TabsTrigger>
                 <TabsTrigger disabled={!detailsValid()} value="tracklist">
                   Tracklist
+                </TabsTrigger>
+                <TabsTrigger
+                  disabled={!detailsValid() || !tracklistValid()}
+                  value="monetization"
+                >
+                  Monetization
                 </TabsTrigger>
                 <TabsTrigger
                   disabled={!detailsValid() || !tracklistValid()}
@@ -501,106 +479,6 @@ export const Upload = () => {
                         </FormHelperError>
                       )}
                     </FormRow>
-
-                    <Flex css={{ mt: "$10" }} direction="column" gap="3">
-                      <Typography size="4">License information</Typography>
-                      <FormRow>
-                        <Label htmlFor="licenseType">UDL</Label>
-                        <FormSelect name="license.type" values={udl.type} />
-                        <Typography
-                          css={{
-                            mt: "$1",
-                            textDecoration: "underline",
-                            cursor: "pointer",
-                            alignSelf: "start",
-
-                            "&:hover": {
-                              color: "$slate12",
-                            },
-                          }}
-                          as="a"
-                          href="https://arwiki.wiki/#/en/Universal-Data-License-How-to-use-it"
-                          size="1"
-                        >
-                          What is UDL?
-                        </Typography>
-                      </FormRow>
-                      {watch("license.type") !== "attribution" &&
-                        watch("license.type") !== "public-use" && (
-                          <>
-                            <FormRow>
-                              <Label htmlFor="license.derivation">
-                                Derivation Options
-                              </Label>
-                              <FormSelect
-                                name="license.derivation"
-                                values={udl.derivationOpts}
-                              />
-                            </FormRow>
-                            {watch("license.derivation") ===
-                              "with-revenue-share" && (
-                              <FormRow>
-                                <Label htmlFor="license.revShare">
-                                  Revenue Share Percentage
-                                </Label>
-                                <TextField
-                                  type="number"
-                                  defaultValue={getValues("license.revShare")}
-                                  min={1}
-                                  max={100}
-                                  placeholder="Enter a percentage"
-                                />
-                              </FormRow>
-                            )}
-                            {watch("license.type") !== "noncommercial" && (
-                              <>
-                                <FormRow>
-                                  <Label htmlFor="license.commercial">
-                                    Commercial Use
-                                  </Label>
-                                  <FormSelect
-                                    name="license.commercial"
-                                    values={udl.commercialOpts}
-                                  />
-                                </FormRow>
-                                {watch("license.commercial") === "with-fee" && (
-                                  <>
-                                    <FormRow>
-                                      <Label htmlFor="license.revShare">
-                                        Commercial Use Fee
-                                      </Label>
-                                      <ControlGroup isSelect>
-                                        <TextField
-                                          type="number"
-                                          min={1}
-                                          max={100}
-                                          placeholder="1"
-                                          defaultValue={getValues(
-                                            "license.commercialFee"
-                                          )}
-                                        />
-                                        <FormSelect
-                                          name="license.currency"
-                                          values={udl.currencyOpts}
-                                        />
-                                      </ControlGroup>
-                                    </FormRow>
-                                    <FormRow>
-                                      <Label htmlFor="license.paymentMode">
-                                        Payment Mode
-                                      </Label>
-                                      <FormSelect
-                                        name="license.paymentMode"
-                                        values={udl.paymentModeOpts}
-                                      />
-                                    </FormRow>
-                                  </>
-                                )}
-                              </>
-                            )}
-                          </>
-                        )}
-                    </Flex>
                   </Flex>
                   <FormRow
                     css={{
@@ -824,14 +702,155 @@ export const Upload = () => {
                   </Flex>
                 </Container>
               </TabsContent>
+              <TabsContent value="monetization">
+                <Flex
+                  css={{ mt: "$10", $$formGap: "80px" }}
+                  direction="column"
+                  gap="3"
+                >
+                  <FormRow>
+                    <Label htmlFor="tokenQuantity">Content tokens</Label>
+                    <TextField
+                      css={{ maxWidth: `calc(50% - $$formGap / 2)` }}
+                      size="3"
+                      type="number"
+                      defaultValue={getValues("tokenQuantity")}
+                      min={1}
+                      max={100}
+                    />
+                    {errors.tokenQuantity && (
+                      <FormHelperError>
+                        {errors.tokenQuantity.message}
+                      </FormHelperError>
+                    )}
+                  </FormRow>
+                  <Typography>License information</Typography>
+                  <FormRow
+                    css={{
+                      maxWidth: `calc(50% - $$formGap / 2)`,
+                    }}
+                  >
+                    <Label htmlFor="license.type">UDL</Label>
+                    <FormSelect name="license.type" values={udl.type} />
+                    <Typography
+                      css={{
+                        mt: "$1",
+                        textDecoration: "underline",
+                        cursor: "pointer",
+                        alignSelf: "start",
+
+                        "&:hover": {
+                          color: "$slate12",
+                        },
+                      }}
+                      as="a"
+                      href="https://arwiki.wiki/#/en/Universal-Data-License-How-to-use-it"
+                      size="1"
+                    >
+                      What is UDL?
+                    </Typography>
+                  </FormRow>
+                  {watch("license.type") !== "attribution" &&
+                    watch("license.type") !== "public-use" && (
+                      <Flex
+                        justify="between"
+                        css={{
+                          gap: "$$formGap",
+                        }}
+                      >
+                        <Flex
+                          css={{
+                            flex: 1,
+                            maxWidth: `calc(50% - $$formGap / 2)`,
+                          }}
+                          direction="column"
+                          gap="5"
+                        >
+                          <FormRow>
+                            <Label htmlFor="license.derivation">
+                              Derivation Options
+                            </Label>
+                            <FormSelect
+                              name="license.derivation"
+                              values={udl.derivationOpts}
+                            />
+                          </FormRow>
+                          {watch("license.derivation") ===
+                            "with-revenue-share" && (
+                            <FormRow>
+                              <Label htmlFor="license.revShare">
+                                Revenue Share Percentage
+                              </Label>
+                              <TextField
+                                size="3"
+                                type="number"
+                                defaultValue={getValues("license.revShare")}
+                                min={1}
+                                max={100}
+                                placeholder="Enter a percentage"
+                              />
+                            </FormRow>
+                          )}
+                        </Flex>
+                        {watch("license.type") !== "noncommercial" && (
+                          <Flex css={{ flex: 1 }} direction="column" gap="5">
+                            <FormRow>
+                              <Label htmlFor="license.commercial">
+                                Commercial Use
+                              </Label>
+                              <FormSelect
+                                name="license.commercial"
+                                values={udl.commercialOpts}
+                              />
+                            </FormRow>
+                            {watch("license.commercial") === "with-fee" && (
+                              <>
+                                <FormRow>
+                                  <Label htmlFor="license.revShare">
+                                    Commercial Use Fee
+                                  </Label>
+                                  <ControlGroup isSelect>
+                                    <TextField
+                                      size="3"
+                                      type="number"
+                                      min={1}
+                                      max={100}
+                                      placeholder="1"
+                                      defaultValue={getValues(
+                                        "license.commercialFee"
+                                      )}
+                                    />
+                                    <FormSelect
+                                      name="license.currency"
+                                      values={udl.currencyOpts}
+                                    />
+                                  </ControlGroup>
+                                </FormRow>
+                                <FormRow>
+                                  <Label htmlFor="license.paymentMode">
+                                    Payment Mode
+                                  </Label>
+                                  <FormSelect
+                                    name="license.paymentMode"
+                                    values={udl.paymentModeOpts}
+                                  />
+                                </FormRow>
+                              </>
+                            )}
+                          </Flex>
+                        )}
+                      </Flex>
+                    )}
+                </Flex>
+              </TabsContent>
               <TabsContent value="review">
-                <Typography css={{ mt: "$10" }} as="h3" size="5" contrast="hi">
-                  Review
+                <Typography css={{ mt: "$10" }} as="h3" contrast="hi">
+                  Review and upload
                 </Typography>
                 <Flex css={{ mt: "$10" }} justify="between" gap="20">
-                  <Flex css={{ flex: 1 }} direction="column" gap="10">
+                  <Flex css={{ flex: 1 }} direction="column" gap="7">
                     <Box>
-                      <Typography size="4" contrast="hi">
+                      <Typography size="4" weight="6" contrast="hi">
                         {getValues("title")}
                       </Typography>
                       {isAlbum ? (
@@ -843,7 +862,25 @@ export const Upload = () => {
                     <Box>
                       <Typography>Release Description</Typography>
                       <Typography contrast="hi">
-                        {getValues("description")}
+                        {getValues("description") || "-"}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography>Genre</Typography>
+                      <Typography contrast="hi">
+                        {getValues("genre")}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography>Additional Tags</Typography>
+                      <Typography contrast="hi">
+                        {getValues("topics") || "-"}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography>License</Typography>
+                      <Typography contrast="hi">
+                        {formatSchemaValue(getValues("license.type"))}
                       </Typography>
                     </Box>
                   </Flex>

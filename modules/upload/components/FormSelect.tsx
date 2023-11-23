@@ -12,6 +12,7 @@ import {
 import { RxChevronDown } from "react-icons/rx";
 import { genres } from "@/data/genres";
 import { UDLValues, udl } from "@/data/license";
+import { formatSchemaValue } from "@/utils";
 
 interface FormSelectProps {
   name: string;
@@ -21,14 +22,6 @@ interface FormSelectProps {
 
 export const FormSelect = ({ values, name, disabled }: FormSelectProps) => {
   const { control, getValues } = useFormContext();
-
-  const formatSelectValue = (value: string) => {
-    const values = value.split("-");
-    const formattedValues = values
-      .map((value) => value.charAt(0).toUpperCase() + value.slice(1))
-      .join(" ");
-    return formattedValues;
-  };
 
   return (
     <Controller
@@ -55,7 +48,7 @@ export const FormSelect = ({ values, name, disabled }: FormSelectProps) => {
                     key={value}
                     value={value}
                   >
-                    {formatSelectValue(value)}
+                    {formatSchemaValue(value)}
                   </SelectItem>
                 ))}
               </SelectViewport>

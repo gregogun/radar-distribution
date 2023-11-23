@@ -162,7 +162,7 @@ export const DetailsDialog = ({
             </IconButton>
           </DialogClose>
         </Flex>
-        <Flex css={{ mt: "$10" }} gap="10">
+        <Flex css={{ mt: "$10" }} gap="20">
           <Flex css={{ flex: 1 }} direction="column">
             <FormRow>
               <Label htmlFor={`tracklist.${index}.metadata.title`}>Title</Label>
@@ -355,13 +355,13 @@ export const DetailsDialog = ({
         <Flex
           justify="end"
           css={{
-            p: "$3",
+            p: "$5",
             position: "absolute",
             bottom: 0,
             left: 0,
             right: 0,
             width: "100%",
-            backgroundColor: "$blackA11",
+            backgroundColor: "$slate1",
             backdropFilter: "blur(4px)",
             borderTop: "1px solid $slate5",
           }}
