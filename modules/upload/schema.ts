@@ -1,21 +1,21 @@
 import { genres } from "@/data/genres";
+import { udl } from "@/data/license";
 import { z } from "Zod";
 
-const udlMetadataSchema = z
+const licenseSchema = z
   .object({
-    derivation: z.enum([
-      "with-credit",
-      "with-indication",
-      "with-passthrough",
-      "with-revenue-share",
-      "none",
-    ]),
-    commercial: z.enum(["allowed", "allow-with-credit", "none"]),
-    revenueSharePercentage: z.number().nonnegative(),
-    fee: z.number().nonnegative(),
-    feeRecurrence: z.enum(["one-time", "monthly"]),
-    currency: z.enum(["AR", "U"]),
-    paymentMode: z.enum(["global", "random"]),
+    type: z.enum(udl.type).default("public-use"),
+    derivation: z.enum(udl.derivationOpts),
+    commercial: z.enum(udl.commercialOpts),
+    revShare: z
+      .number()
+      .nonnegative()
+      .min(1)
+      .max(100, "Percentage cannot exceed 100."),
+    commercialFee: z.number().min(1).nonnegative(),
+    feeRecurrence: z.enum(udl.feeRecurrenceOpts),
+    currency: z.enum(udl.currencyOpts),
+    paymentMode: z.enum(udl.paymentModeOpts),
   })
   .optional();
 
@@ -72,6 +72,7 @@ export const uploadSchema = z.object({
   releaseDate: z.string().optional(),
   releaseArtwork: artworkSchema,
   tracklist: z.array(trackSchema).min(1, "At least 1 track is required"),
-  licenseType: z.enum(["none", "udl"]).default("none"),
-  udlMetadata: udlMetadataSchema,
+  license: licenseSchema,
+  // licenseType: z.enum(["none", "UDL"]).default("none"),
+  // udlMetadata: udlMetadataSchema,
 });

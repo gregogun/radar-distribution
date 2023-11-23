@@ -24,6 +24,7 @@ import {
 } from "@/ui/Select";
 import { genres } from "@/data/genres";
 import { Image } from "@/ui/Image";
+import { Button } from "@/ui/Button";
 
 interface DetailsDialogProps {
   index: number;
@@ -124,6 +125,7 @@ export const DetailsDialog = ({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent
         css={{
+          pb: "$20",
           maxWidth: "100%",
           overflowY: "scroll",
 
@@ -349,6 +351,30 @@ export const DetailsDialog = ({
                 )}
             </Flex>
           </FormRow>
+        </Flex>
+        <Flex
+          justify="end"
+          css={{
+            p: "$3",
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            width: "100%",
+            backgroundColor: "$blackA11",
+            backdropFilter: "blur(4px)",
+            borderTop: "1px solid $slate5",
+          }}
+        >
+          <DialogClose
+            asChild
+            css={{
+              position: "relative",
+              inset: 0,
+            }}
+          >
+            <Button variant="solid">Save</Button>
+          </DialogClose>
         </Flex>
       </DialogContent>
     </Dialog>
