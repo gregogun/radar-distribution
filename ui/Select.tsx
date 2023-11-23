@@ -8,6 +8,7 @@ export const SelectTrigger = styled(SelectPrimitive.Trigger, {
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "space-between",
+  gap: "$2",
   p: "$3",
   br: "$1",
   boxShadow: "0 0 0 1px $colors$slate6",
@@ -42,6 +43,8 @@ export const SelectContent = styled(SelectPrimitive.Content, {
 export const SelectViewport = styled(SelectPrimitive.Viewport, {
   padding: 5,
 });
+
+type StyledSelectItemProps = ComponentProps<typeof StyledItem>;
 
 const StyledItem = styled(SelectPrimitive.Item, {
   fontSize: "$sm",
@@ -79,19 +82,20 @@ export const StyledItemIndicator = styled(SelectPrimitive.ItemIndicator, {
 
 type SelectItemProps = ComponentProps<typeof SelectPrimitive.Item>;
 
-export const SelectItem = forwardRef<HTMLDivElement, SelectItemProps>(
-  ({ children, ...props }, forwardedRef) => {
-    return (
-      //@ts-ignore
-      <StyledItem {...props} ref={forwardedRef as Ref<HTMLDivElement>}>
-        <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
-        <StyledItemIndicator>
-          <RxCheck />
-        </StyledItemIndicator>
-      </StyledItem>
-    );
-  }
-);
+export const SelectItem = forwardRef<
+  HTMLDivElement,
+  SelectItemProps & StyledSelectItemProps
+>(({ children, ...props }, forwardedRef) => {
+  return (
+    //@ts-ignore
+    <StyledItem {...props} ref={forwardedRef as Ref<HTMLDivElement>}>
+      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+      <StyledItemIndicator>
+        <RxCheck />
+      </StyledItemIndicator>
+    </StyledItem>
+  );
+});
 
 export const Select = styled(SelectPrimitive.Root);
 export const SelectPortal = SelectPrimitive.Portal;

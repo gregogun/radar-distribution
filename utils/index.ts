@@ -20,3 +20,11 @@ export const arrayBuffersEqual = (
 
   return true;
 };
+
+export const formatSchemaValue = (value: string) => {
+  const values = value.split("-");
+  const formattedValues = values
+    .map((value) => value.charAt(0).toUpperCase() + value.slice(1))
+    .join(" ");
+  return formattedValues;
+};

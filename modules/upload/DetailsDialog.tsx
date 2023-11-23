@@ -24,6 +24,7 @@ import {
 } from "@/ui/Select";
 import { genres } from "@/data/genres";
 import { Image } from "@/ui/Image";
+import { Button } from "@/ui/Button";
 
 interface DetailsDialogProps {
   index: number;
@@ -76,11 +77,6 @@ export const DetailsDialog = ({
     onDrop: onImageDrop,
   });
 
-  //   const releaseArtwork = form.watch(
-  //     `tracklist.${index}.metadata.artwork.file.url`,
-  //     form.getValues(`releaseArtwork.file.url`)
-  //   );
-
   const handleRemoveCoverArt = (e: any) => {
     e.stopPropagation();
 
@@ -129,22 +125,44 @@ export const DetailsDialog = ({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent
         css={{
-          maxWidth: 800,
+          pb: "$20",
+          maxWidth: "100%",
           overflowY: "scroll",
 
-          // "@bp4": {
-          //   maxHeight: 600,
-          // },
+          "@bp4": {
+            maxWidth: "60%",
+          },
 
-          // "@bp5": {
-          //   maxHeight: 700,
-          // },
+          "@bp5": {
+            maxHeight: 700,
+          },
         }}
       >
-        <DialogTitle asChild>
-          <Typography>Add details for {track.metadata.title}</Typography>
-        </DialogTitle>
-        <Flex gap="10">
+        <Flex
+          css={{
+            backgroundColor: "$slate1",
+            borderBottom: "1px solid $slate5",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            p: "$3",
+            width: "100%",
+          }}
+          justify="between"
+          align="center"
+        >
+          <DialogTitle asChild>
+            <Typography>Add details for {track.metadata.title}</Typography>
+          </DialogTitle>
+
+          <DialogClose pos="relative" asChild>
+            <IconButton css={{ br: "$round" }} size="1">
+              <RxCross2 />
+            </IconButton>
+          </DialogClose>
+        </Flex>
+        <Flex css={{ mt: "$10" }} gap="20">
           <Flex css={{ flex: 1 }} direction="column">
             <FormRow>
               <Label htmlFor={`tracklist.${index}.metadata.title`}>Title</Label>
@@ -246,11 +264,6 @@ export const DetailsDialog = ({
             </Label>
             <ImageDropContainer
               css={{
-                // background: releaseArtwork
-                //   ? `url(${releaseArtwork})`
-                //   : "transparent",
-
-                // mb: "$15",
                 pointerEvents:
                   form.getValues("tracklist").length <= 1 ? "none" : "auto",
                 opacity: form.getValues("tracklist").length <= 1 ? 0.5 : 1,
@@ -339,12 +352,30 @@ export const DetailsDialog = ({
             </Flex>
           </FormRow>
         </Flex>
-
-        <DialogClose asChild>
-          <IconButton css={{ br: "$round" }} size="1">
-            <RxCross2 />
-          </IconButton>
-        </DialogClose>
+        <Flex
+          justify="end"
+          css={{
+            p: "$5",
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            width: "100%",
+            backgroundColor: "$slate1",
+            backdropFilter: "blur(4px)",
+            borderTop: "1px solid $slate5",
+          }}
+        >
+          <DialogClose
+            asChild
+            css={{
+              position: "relative",
+              inset: 0,
+            }}
+          >
+            <Button variant="solid">Save</Button>
+          </DialogClose>
+        </Flex>
       </DialogContent>
     </Dialog>
   );

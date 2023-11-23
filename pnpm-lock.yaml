@@ -9,6 +9,7 @@ specifiers:
   '@radix-ui/react-dialog': 1.0.5
   '@radix-ui/react-label': 0.1.5
   '@radix-ui/react-progress': 1.0.3
+  '@radix-ui/react-radio-group': 1.1.3
   '@radix-ui/react-select': 2.0.0
   '@radix-ui/react-slider': 1.1.2
   '@radix-ui/react-tabs': 1.0.4
@@ -47,6 +48,7 @@ dependencies:
   '@radix-ui/react-dialog': 1.0.5_fxtgt6bjwd6p4cwoordejim2zi
   '@radix-ui/react-label': 0.1.5_react@18.2.0
   '@radix-ui/react-progress': 1.0.3_fxtgt6bjwd6p4cwoordejim2zi
+  '@radix-ui/react-radio-group': 1.1.3_fxtgt6bjwd6p4cwoordejim2zi
   '@radix-ui/react-select': 2.0.0_fxtgt6bjwd6p4cwoordejim2zi
   '@radix-ui/react-slider': 1.1.2_fxtgt6bjwd6p4cwoordejim2zi
   '@radix-ui/react-tabs': 1.0.4_fxtgt6bjwd6p4cwoordejim2zi
@@ -85,13 +87,13 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       regenerator-runtime: 0.13.11
+    dev: false
 
   /@babel/runtime/7.23.2:
     resolution: {integrity: sha512-mM8eg4yl5D6i3lu2QKPuPH4FArvJ8KhTofbE7jwMUv9KX5mBvwPAqnV3MlyBNqdp9RyRKP6Yck8TrfYrPvX3bg==}
     engines: {node: '>=6.9.0'}
     dependencies:
       regenerator-runtime: 0.14.0
-    dev: false
 
   /@eslint/eslintrc/1.4.1:
     resolution: {integrity: sha512-XXrH9Uarn0stsyldqDYq8r++mROmWRI1xKMXa640Bb//SY1+ECYX6VzT6Lcx5frD0V30XieqJ0oX9I2Xj5aoMA==}
@@ -1281,6 +1283,36 @@ packages:
       '@babel/runtime': 7.23.2
       '@radix-ui/react-context': 1.0.1_3stiutgnnbnfnf3uowm5cip22i
       '@radix-ui/react-primitive': 1.0.3_fxtgt6bjwd6p4cwoordejim2zi
+      '@types/react': 18.0.27
+      '@types/react-dom': 18.0.10
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    dev: false
+
+  /@radix-ui/react-radio-group/1.1.3_fxtgt6bjwd6p4cwoordejim2zi:
+    resolution: {integrity: sha512-x+yELayyefNeKeTx4fjK6j99Fs6c4qKm3aY38G3swQVTN6xMpsrbigC0uHs2L//g8q4qR7qOcww8430jJmi2ag==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.23.2
+      '@radix-ui/primitive': 1.0.1
+      '@radix-ui/react-compose-refs': 1.0.1_3stiutgnnbnfnf3uowm5cip22i
+      '@radix-ui/react-context': 1.0.1_3stiutgnnbnfnf3uowm5cip22i
+      '@radix-ui/react-direction': 1.0.1_3stiutgnnbnfnf3uowm5cip22i
+      '@radix-ui/react-presence': 1.0.1_fxtgt6bjwd6p4cwoordejim2zi
+      '@radix-ui/react-primitive': 1.0.3_fxtgt6bjwd6p4cwoordejim2zi
+      '@radix-ui/react-roving-focus': 1.0.4_fxtgt6bjwd6p4cwoordejim2zi
+      '@radix-ui/react-use-controllable-state': 1.0.1_3stiutgnnbnfnf3uowm5cip22i
+      '@radix-ui/react-use-previous': 1.0.1_3stiutgnnbnfnf3uowm5cip22i
+      '@radix-ui/react-use-size': 1.0.1_3stiutgnnbnfnf3uowm5cip22i
       '@types/react': 18.0.27
       '@types/react-dom': 18.0.10
       react: 18.2.0
@@ -2960,7 +2992,7 @@ packages:
     peerDependencies:
       eslint: ^3 || ^4 || ^5 || ^6 || ^7 || ^8
     dependencies:
-      '@babel/runtime': 7.20.13
+      '@babel/runtime': 7.23.2
       aria-query: 5.1.3
       array-includes: 3.1.6
       array.prototype.flatmap: 1.3.1
@@ -4723,10 +4755,10 @@ packages:
 
   /regenerator-runtime/0.13.11:
     resolution: {integrity: sha512-kY1AZVr2Ra+t+piVaJ4gxaFaReZVH40AKNo7UCX6W+dEwBo/2oZJzqfuN1qLq1oL45o56cPaTXELwrTh8Fpggg==}
+    dev: false
 
   /regenerator-runtime/0.14.0:
     resolution: {integrity: sha512-srw17NI0TUWHuGa5CFGGmhfNIeja30WMBfbslPNhf6JrqQlLN5gcrvig1oqPxiVaXb0oW0XRKtH6Nngs5lKCIA==}
-    dev: false
 
   /regexp.prototype.flags/1.4.3:
     resolution: {integrity: sha512-fjggEOO3slI6Wvgjwflkc4NFRCTZAu5CnNfBd5qOMYhWdn67nJBBu34/TkD++eeFmd8C9r9jfXJ27+nSiRkSUA==}
