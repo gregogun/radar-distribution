@@ -360,14 +360,6 @@ export const Upload = () => {
   return (
     <Fullscreen>
       <Flex direction="column">
-        <Flex
-          justify="between"
-          align="center"
-          css={{ py: "$3", px: "$7", mb: "$5" }}
-        >
-          <Typography contrast="hi">radar</Typography>
-          <Button variant="transparent">connect wallet</Button>
-        </Flex>
         <FormProvider {...form}>
           <Container
             css={{

@@ -1,5 +1,7 @@
+import { ConnectProvider } from "@/hooks/useConnect";
 import { darkTheme, globalCss } from "@/stitches.config";
 import "@/styles/globals.css";
+import { ArweaveWebWallet } from "arweave-wallet-connector";
 import { ThemeProvider } from "next-themes";
 import type { AppProps } from "next/app";
 import { Toaster } from "sonner";
@@ -48,6 +50,10 @@ const globalStyles = globalCss({
 
 globalStyles();
 
+const webWallet = new ArweaveWebWallet({
+  name: "Radar",
+});
+
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <ThemeProvider
@@ -56,8 +62,10 @@ export default function App({ Component, pageProps }: AppProps) {
       value={{ light: "light-theme", dark: darkTheme.className }}
       enableSystem
     >
-      <Toaster richColors position="bottom-right" />
-      <Component {...pageProps} />
+      <ConnectProvider webWallet={webWallet} includeProfile detectWalletSwitch>
+        <Toaster richColors position="bottom-right" />
+        <Component {...pageProps} />
+      </ConnectProvider>
     </ThemeProvider>
   );
 }
