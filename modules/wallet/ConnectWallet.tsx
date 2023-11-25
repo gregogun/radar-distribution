@@ -1,7 +1,7 @@
 import * as React from "react";
 import { PermissionType } from "arconnect";
 import { ConnectWalletDialog } from "./ConnectWalletDialog";
-import { useConnect } from "../../../hooks/useConnect";
+import { useConnect } from "../../hooks/useConnect";
 import { CSS } from "@/stitches.config";
 import { Button, ButtonProps } from "@/ui/Button";
 import { IconButton } from "@/ui/IconButton";

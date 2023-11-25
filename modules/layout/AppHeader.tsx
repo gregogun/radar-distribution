@@ -6,7 +6,7 @@ import { Image } from "@/ui/Image";
 import { HeaderDropdown } from "./HeaderDropdown";
 import { useTheme } from "next-themes";
 import { useEffect } from "react";
-import { ConnectWallet } from "./components/ConnectWallet";
+import { ConnectWallet } from "../wallet/ConnectWallet";
 import { useConnect } from "@/hooks/useConnect";
 import { IconButton } from "@/ui/IconButton";
 import { BsSun } from "react-icons/bs";

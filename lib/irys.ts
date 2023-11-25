@@ -1,11 +1,11 @@
-import { TransactionTags } from "@/types";
+import { IrysNode, TransactionTags } from "@/types";
 import { WebIrys } from "@irys/sdk";
 
-export const getIrys = async () => {
+export const getIrys = async (url?: string) => {
   const irys = new WebIrys({
     token: "arweave",
     wallet: { provider: window.arweaveWallet },
-    url: "https://node2.irys.xyz",
+    url: url || "https://node2.irys.xyz",
   });
 
   await irys.ready();
@@ -55,4 +55,32 @@ export const uploadChunks = async (
 
   const response = await upload;
   return response;
+};
+
+export const getIrysBalance = async (node: IrysNode) => {
+  const url = `https://${node}.irys.xyz`;
+  const irys = await getIrys(url);
+
+  const atomicBalance = await irys.getLoadedBalance();
+
+  const convertedBalance = irys.utils.fromAtomic(atomicBalance);
+
+  return convertedBalance;
+};
+
+export const fundIrysNode = async ({
+  node,
+  amount,
+}: {
+  node: IrysNode;
+  amount: number;
+}) => {
+  const url = `https://${node}.irys.xyz`;
+  const irys = await getIrys(url);
+
+  const fundTx = await irys.fund(irys.utils.toAtomic(amount));
+  return {
+    quantity: irys.utils.fromAtomic(fundTx.quantity),
+    token: irys.token,
+  };
 };

@@ -9,6 +9,11 @@ export type TransactionTag = {
 
 export type TransactionTags = TransactionTag[];
 
+export type IconProps = {
+  width?: number | string | undefined;
+  height?: number | string | undefined;
+};
+
 export interface ArweaveWalletProps extends AppInfo {
   url?: string;
 }
@@ -42,6 +47,8 @@ export type ArweaveConfig = {
 };
 
 export type Vouched = boolean;
+
+export type IrysNode = "node1" | "node2";
 
 export declare const WebWallet: {
   namespaces: {

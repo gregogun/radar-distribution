@@ -1,11 +1,11 @@
 import * as React from "react";
 import { PermissionType } from "arconnect";
 import { RxCross1 } from "react-icons/rx";
-import { useConnect } from "../../../hooks/useConnect";
-import { PermaProfile } from "../../../types";
-import { ArweaveLogo } from "./ArweaveLogo";
-import { ArconnectLogo } from "./ArconnectLogo";
-import { ConnectIcon } from "./ConnectIcon";
+import { useConnect } from "../../hooks/useConnect";
+import { PermaProfile } from "../../types";
+import { ArweaveLogo } from "./components/ArweaveLogo";
+import { ArconnectLogo } from "./components/ArconnectLogo";
+import { ConnectIcon } from "./components/ConnectIcon";
 import { Button } from "@/ui/Button";
 import {
   Dialog,

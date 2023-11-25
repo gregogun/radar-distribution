@@ -712,6 +712,7 @@ export const Upload = () => {
                       defaultValue={getValues("tokenQuantity")}
                       min={1}
                       max={100}
+                      {...register("tokenQuantity")}
                     />
                     {errors.tokenQuantity && (
                       <FormHelperError>
@@ -783,7 +784,13 @@ export const Upload = () => {
                                 min={1}
                                 max={100}
                                 placeholder="Enter a percentage"
+                                {...register("license.revShare")}
                               />
+                              {errors.license?.revShare && (
+                                <FormHelperError>
+                                  {errors.license?.revShare.message}
+                                </FormHelperError>
+                              )}
                             </FormRow>
                           )}
                         </Flex>
@@ -800,27 +807,43 @@ export const Upload = () => {
                             </FormRow>
                             {watch("license.commercial") === "with-fee" && (
                               <>
-                                <FormRow>
-                                  <Label htmlFor="license.revShare">
-                                    Commercial Use Fee
-                                  </Label>
-                                  <ControlGroup isSelect>
-                                    <TextField
-                                      size="3"
-                                      type="number"
-                                      min={1}
-                                      max={100}
-                                      placeholder="1"
-                                      defaultValue={getValues(
-                                        "license.commercialFee"
-                                      )}
-                                    />
+                                <Flex gap="3">
+                                  <FormRow css={{ flex: 1 }}>
+                                    <Label htmlFor="license.commercialFee">
+                                      Fee
+                                    </Label>
+                                    <ControlGroup isSelect>
+                                      <TextField
+                                        size="3"
+                                        type="number"
+                                        min={1}
+                                        max={100}
+                                        defaultValue={getValues(
+                                          "license.commercialFee"
+                                        )}
+                                        {...register("license.commercialFee")}
+                                      />
+                                      <FormSelect
+                                        name="license.currency"
+                                        values={udl.currencyOpts}
+                                      />
+                                    </ControlGroup>
+                                    {errors.license?.commercialFee && (
+                                      <FormHelperError>
+                                        {errors.license?.commercialFee.message}
+                                      </FormHelperError>
+                                    )}
+                                  </FormRow>
+                                  <FormRow>
+                                    <Label htmlFor="license.feeRecurrence">
+                                      Recurrence
+                                    </Label>
                                     <FormSelect
-                                      name="license.currency"
-                                      values={udl.currencyOpts}
+                                      name="license.feeRecurrence"
+                                      values={udl.feeRecurrenceOpts}
                                     />
-                                  </ControlGroup>
-                                </FormRow>
+                                  </FormRow>
+                                </Flex>
                                 <FormRow>
                                   <Label htmlFor="license.paymentMode">
                                     Payment Mode
