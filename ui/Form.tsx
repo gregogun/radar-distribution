@@ -1,5 +1,6 @@
 import { CSS, styled } from "@/stitches.config";
 import { Flex } from "./Flex";
+import { Typography } from "./Typography";
 
 const FormHelperErrorText = styled("p", {
   fontSize: "$1",
@@ -23,13 +24,17 @@ export const FormHelperError = ({
   </FormHelperErrorText>
 );
 
-export const FormHelperText = styled("p", {
+export const FormHelperText = styled(Typography, {
   fontSize: "$1",
   lineHeight: "$2",
   m: 0,
   mt: "$1",
   position: "absolute",
   bottom: 0,
+
+  defaultVariants: {
+    size: "1",
+  },
 });
 
 export const FormRow = styled(Flex, {

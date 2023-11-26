@@ -7,12 +7,12 @@ const licenseSchema = z
     type: z.enum(udl.type).default("public-use"),
     derivation: z.enum(udl.derivationOpts),
     commercial: z.enum(udl.commercialOpts),
-    revShare: z
+    revShare: z.coerce
       .number()
       .nonnegative()
       .min(1)
       .max(100, "Percentage cannot exceed 100."),
-    commercialFee: z.number().min(1).nonnegative(),
+    commercialFee: z.coerce.number().min(1).nonnegative(),
     feeRecurrence: z.enum(udl.feeRecurrenceOpts),
     currency: z.enum(udl.currencyOpts),
     paymentMode: z.enum(udl.paymentModeOpts),
@@ -73,5 +73,5 @@ export const uploadSchema = z.object({
   releaseArtwork: artworkSchema,
   tracklist: z.array(trackSchema).min(1, "At least 1 track is required"),
   license: licenseSchema,
-  tokenQuantity: z.number().min(1).max(100),
+  tokenQuantity: z.coerce.number().min(1).max(100),
 });

@@ -12,7 +12,7 @@ export const SelectTrigger = styled(SelectPrimitive.Trigger, {
   p: "$3",
   br: "$1",
   boxShadow: "0 0 0 1px $colors$slate6",
-  fontSize: "$sm",
+  fontSize: "$2",
 
   "&:hover": { boxShadow: "0 0 0 1px $colors$slate7" },
   "&:focus": { boxShadow: "0 0 0 2px $colors$focus" },
@@ -30,6 +30,27 @@ export const SelectTrigger = styled(SelectPrimitive.Trigger, {
     "& svg": {
       color: "$slate9",
     },
+  },
+
+  variants: {
+    size: {
+      1: {
+        fontSize: "$2",
+        p: "$2",
+      },
+      2: {
+        fontSize: "$3",
+        p: "$3",
+      },
+      3: {
+        fontSize: "$3",
+        p: "$5",
+      },
+    },
+  },
+
+  defaultVariants: {
+    size: "2",
   },
 });
 

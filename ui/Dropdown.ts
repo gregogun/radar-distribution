@@ -55,10 +55,9 @@ export const itemStyles = {
   borderRadius: 3,
   display: "flex",
   alignItems: "center",
-  height: 25,
-  padding: "0 5px",
+  px: "$3",
+  height: 20,
   position: "relative",
-  paddingLeft: 25,
   userSelect: "none",
 
   "&[data-disabled]": {
