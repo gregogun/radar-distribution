@@ -73,5 +73,5 @@ export const uploadSchema = z.object({
   releaseArtwork: artworkSchema,
   tracklist: z.array(trackSchema).min(1, "At least 1 track is required"),
   license: licenseSchema,
-  tokenQuantity: z.number().min(1).max(100),
+  tokenQuantity: z.coerce.number().min(1).max(100),
 });
