@@ -66,7 +66,7 @@ export const Textarea = styled("textarea", {
       },
       3: {
         height: 80,
-        fontSize: "$3",
+        fontSize: "$2",
         lineHeight: "$3",
       },
     },
