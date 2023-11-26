@@ -10,6 +10,9 @@ import { ConnectWallet } from "../wallet/ConnectWallet";
 import { useConnect } from "@/hooks/useConnect";
 import { IconButton } from "@/ui/IconButton";
 import { BsSun } from "react-icons/bs";
+import { useQuery } from "@tanstack/react-query";
+import { getAccount } from "@/lib/account/api";
+import { appConfig } from "@/appConfig";
 
 const NavLink = styled(Link, {
   display: "flex",
@@ -33,7 +36,7 @@ const NavLink = styled(Link, {
 });
 
 export const AppHeader = () => {
-  const { walletAddress, profile } = useConnect();
+  const { walletAddress } = useConnect();
   const location = useLocation();
   const { resolvedTheme, setTheme } = useTheme();
 
@@ -109,7 +112,7 @@ export const AppHeader = () => {
           <BsSun />
         </IconButton>
         {walletAddress ? (
-          <HeaderDropdown walletAddress={walletAddress} profile={profile} />
+          <HeaderDropdown walletAddress={walletAddress} />
         ) : (
           <ConnectWallet
             permissions={[

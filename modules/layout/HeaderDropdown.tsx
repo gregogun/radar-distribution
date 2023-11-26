@@ -27,18 +27,16 @@ import { styled } from "@/stitches.config";
 import { useConnect } from "@/hooks/useConnect";
 import { PermaProfile } from "@/types";
 import { FundNodeDialog } from "../wallet/FundNodeDialog";
+import { useQuery } from "@tanstack/react-query";
+import { getAccount } from "@/lib/account/api";
 
 const StyledLink = styled(Link);
 
 interface HeaderDropdownProps {
-  profile?: PermaProfile | undefined;
   walletAddress: string;
 }
 
-export const HeaderDropdown = ({
-  profile,
-  walletAddress,
-}: HeaderDropdownProps) => {
+export const HeaderDropdown = ({ walletAddress }: HeaderDropdownProps) => {
   const { setState } = useConnect();
   // const [showFundNodeDialog, setShowFundNodeDialog] = useState(false);
   const [currentGateway, setCurrentGateway] = useState(
@@ -48,8 +46,18 @@ export const HeaderDropdown = ({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [openingDialog, setOpeningDialog] = useState(false);
   const [closingDialog, setClosingDialog] = useState(false);
-
   const dropdownItemRef = useRef<HTMLDivElement | null>(null);
+
+  const { data: profile, isError } = useQuery({
+    queryKey: [`profile-${walletAddress}`],
+    queryFn: () => {
+      if (!walletAddress) {
+        throw new Error("No profile has been found");
+      }
+
+      return getAccount(walletAddress, { gateway: appConfig.defaultGateway });
+    },
+  });
 
   useEffect(() => {
     if (openingDialog) {
