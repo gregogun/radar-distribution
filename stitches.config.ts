@@ -107,6 +107,7 @@ export const {
       3: "8px",
       4: "12px",
       round: "50%",
+      pill: "9999px",
     },
   },
   media: {

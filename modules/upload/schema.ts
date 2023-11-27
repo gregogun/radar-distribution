@@ -52,8 +52,15 @@ export type Track = z.infer<typeof trackSchema>;
 const trackSchema = z.object({
   // data: z.custom<ArrayBuffer>(),
   file: z.custom<File>(),
-  metadata: trackMetadataSchema,
   url: z.string(),
+  metadata: trackMetadataSchema,
+  upload: z.object({
+    status: z
+      .enum(["idle", "in-progress", "success", "failed"] as const)
+      .default("idle"),
+    progress: z.number().default(0),
+    tx: z.string().nullish(),
+  }),
 });
 
 export const uploadSchema = z.object({

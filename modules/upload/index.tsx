@@ -30,8 +30,11 @@ import { ImageDropzone } from "./components/Dropzone";
 import { FormSelect } from "./components/FormSelect";
 import { udl } from "@/data/license";
 import { ControlGroup } from "@/ui/ControlGroup";
-import { formatSchemaValue } from "@/utils";
+import { formatSchemaValue, formatDuration } from "@/utils";
 import { useConnect } from "@/hooks/useConnect";
+import { useQuery } from "@tanstack/react-query";
+import { TrackItem } from "./components/TrackItem";
+import { getTotalDuration } from "@/lib/audioDuration";
 
 const AudioDropContainer = styled("div", {
   display: "flex",
@@ -262,6 +265,10 @@ export const Upload = () => {
                   url: form.getValues("releaseArtwork.url"),
                 },
               },
+              upload: {
+                progress: 0,
+                status: "idle",
+              },
             };
             resolve(track);
           };
@@ -296,6 +303,10 @@ export const Upload = () => {
             artwork: form.getValues("releaseArtwork"),
             genre: form.getValues("genre"),
             topics: form.getValues("topics"),
+          },
+          upload: {
+            progress: 0,
+            status: "idle",
           },
         });
       } else {
@@ -357,6 +368,12 @@ export const Upload = () => {
       }
     }
   };
+
+  const { data: totalDuration } = useQuery({
+    queryKey: ["totalDuration"],
+    enabled: !!getValues("tracklist") && currentTab === "review",
+    queryFn: () => getTotalDuration(getValues("tracklist")),
+  });
 
   return (
     <Fullscreen>
@@ -869,54 +886,120 @@ export const Upload = () => {
                   <Typography css={{ mt: "$10" }} as="h3" contrast="hi">
                     Review and upload
                   </Typography>
-                  <Flex css={{ mt: "$10" }} justify="between" gap="20">
-                    <Flex css={{ flex: 1 }} direction="column" gap="7">
-                      <Box>
-                        <Typography size="4" weight="6" contrast="hi">
-                          {getValues("title")}
-                        </Typography>
-                        {isAlbum ? (
+                  <Flex css={{ mt: "$5" }} direction="column" gap="7">
+                    <Flex gap="5">
+                      <Image
+                        css={{
+                          width: 200,
+                          height: 200,
+                          maxWidth: 200,
+                          maxHeight: 200,
+                          flex: 1,
+                        }}
+                        src={getValues("releaseArtwork.url")}
+                      />
+                      <Flex
+                        css={{
+                          width: "100%",
+                          p: "$5",
+                          flex: 1,
+                        }}
+                        gap="20"
+                        align="center"
+                        justify="between"
+                      >
+                        <Flex
+                          css={{ height: "100%" }}
+                          direction="column"
+                          justify="between"
+                          gap="10"
+                        >
+                          <Box>
+                            <Typography size="1">
+                              {isAlbum ? "Album" : "Single"}
+                            </Typography>
+                            <Typography size="6" weight="5" contrast="hi">
+                              {getValues("title")}
+                            </Typography>
+                          </Box>
+                          <Flex gap="1" align="center">
+                            {/* temp */}
+                            <Image
+                              css={{
+                                boxSize: "$5",
+                                br: "$round",
+                              }}
+                              src={getValues("releaseArtwork.url")}
+                            />
+                            <Typography contrast="hi" size="2" weight="5">
+                              Winston Arnold
+                            </Typography>
+                            <Typography contrast="hi" size="2">
+                              •
+                            </Typography>
+                            <Typography contrast="hi" size="2">
+                              1 track
+                            </Typography>
+                            <Typography contrast="hi" size="2">
+                              •
+                            </Typography>
+                            {totalDuration && (
+                              <Typography size="2">
+                                {formatDuration({
+                                  duration: totalDuration,
+                                  options: { suffix: true },
+                                })}
+                              </Typography>
+                            )}
+                          </Flex>
+                        </Flex>
+
+                        <Flex
+                          css={{ height: "100%" }}
+                          direction="column"
+                          justify="between"
+                          align="end"
+                        >
+                          <Flex direction="column" gap="3" align="end">
+                            <Typography size="1">
+                              {getValues("genre")}
+                            </Typography>
+                            {getValues("topics") ? (
+                              <Flex wrap="wrap" gap="2">
+                                {getValues("topics")
+                                  ?.split(",")
+                                  .map((topic) => (
+                                    <Typography
+                                      css={{
+                                        px: "$3",
+                                        py: "$1",
+                                        br: "$pill",
+                                        backgroundColor: "$slate3",
+                                      }}
+                                      size="1"
+                                    >
+                                      {topic.replace(" ", "")}
+                                    </Typography>
+                                  ))}
+                              </Flex>
+                            ) : (
+                              <Typography size="2">-</Typography>
+                            )}
+                          </Flex>
                           <Typography>
-                            Album release, {tracks} tracks
+                            {formatSchemaValue(getValues("license.type"))}
                           </Typography>
-                        ) : (
-                          <Typography>
-                            Single release, {tracks} track
-                          </Typography>
-                        )}
-                      </Box>
-                      <Box>
-                        <Typography>Release Description</Typography>
-                        <Typography contrast="hi">
-                          {getValues("description") || "-"}
-                        </Typography>
-                      </Box>
-                      <Box>
-                        <Typography>Genre</Typography>
-                        <Typography contrast="hi">
-                          {getValues("genre")}
-                        </Typography>
-                      </Box>
-                      <Box>
-                        <Typography>Additional Tags</Typography>
-                        <Typography contrast="hi">
-                          {getValues("topics") || "-"}
-                        </Typography>
-                      </Box>
-                      <Box>
-                        <Typography>License</Typography>
-                        <Typography contrast="hi">
-                          {formatSchemaValue(getValues("license.type"))}
-                        </Typography>
-                      </Box>
+                        </Flex>
+                      </Flex>
                     </Flex>
-                    <Image
-                      css={{
-                        width: 400,
-                        height: 400,
-                      }}
-                      src={getValues("releaseArtwork.url")}
-                    />
+                    <Box css={{ height: 1, backgroundColor: "$slate5" }} />
+                    {form.getValues("tracklist")?.length && (
+                      <Flex direction="column">
+                        {form.getValues("tracklist").map((track) => (
+                          <TrackItem key={track.url} track={track} />
+                        ))}
+                      </Flex>
+                    )}
                   </Flex>
                 </TabsContent>
               </Tabs>

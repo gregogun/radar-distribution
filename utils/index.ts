@@ -58,15 +58,39 @@ export const abbreviateAddress = ({
   return `${firstFive}${dot.repeat(noOfEllipsis)}${lastFour}`;
 };
 
-export const formatTime = (time: number): string => {
-  const minutes: number = Math.floor(time / 60) % 60;
-  const seconds: number = Math.floor(time % 60);
-  const hours: number = Math.floor(time / 3600);
+interface FormatTime {
+  duration: number;
+  options?: {
+    suffix?: boolean;
+  };
+}
 
-  const formattedSeconds: string = `${seconds < 10 ? "0" : ""}${seconds}`;
+export const formatDuration = ({
+  duration,
+  options = {},
+}: FormatTime): string => {
+  const { suffix } = options;
+  const minutes: number = Math.floor(duration / 60) % 60;
+  const seconds: number = Math.floor(duration % 60);
+  const hours: number = Math.floor(duration / 3600);
+
+  const hoursText = hours === 1 ? "hour" : "hours";
+  const minutesText = minutes === 1 ? "minute" : "minutes";
+
+  const formattedSeconds: string = suffix
+    ? `${seconds < 10 ? "0" : ""}${seconds} ${seconds === 1 ? "sec" : "secs"}`
+    : `${seconds < 10 ? "0" : ""}${seconds}`;
 
   if (hours > 0) {
-    return `${hours}:${minutes}:${formattedSeconds}`;
+    if (suffix) {
+      return `${hours} ${hoursText} ${minutes} ${minutesText} ${formattedSeconds}`;
+    } else {
+      return `${hours}:${minutes}:${formattedSeconds}`;
+    }
+  }
+
+  if (suffix) {
+    return `${minutes} ${minutesText} ${formattedSeconds}`;
   }
 
   return `${minutes}:${formattedSeconds}`;
