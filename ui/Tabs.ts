@@ -13,7 +13,7 @@ export const TabsTrigger = styled(TabsPrimitive.Trigger, {
   fontSize: "$2",
   color: "$slate9",
   px: "$5",
-  pb: "$2",
+  py: "$2",
 
   "&:hover": {
     color: "$slate10",
@@ -28,6 +28,10 @@ export const TabsTrigger = styled(TabsPrimitive.Trigger, {
     color: "$slate12",
     boxShadow: "0 1px 0 0 $colors$slate12",
     fontWeight: 600,
+
+    "&:focus-visible": {
+      boxShadow: "0 0 0 1px $colors$focus",
+    },
   },
 });
 
