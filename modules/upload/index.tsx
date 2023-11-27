@@ -24,7 +24,6 @@ import { FormProvider, useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DetailsDialog } from "./DetailsDialog";
 import { Image } from "@/ui/Image";
-import { useWallet } from "@/hooks/useWallet";
 import { upload } from "@/lib/upload";
 import { toast } from "sonner";
 import { ImageDropzone } from "./components/Dropzone";
@@ -32,6 +31,7 @@ import { FormSelect } from "./components/FormSelect";
 import { udl } from "@/data/license";
 import { ControlGroup } from "@/ui/ControlGroup";
 import { formatSchemaValue } from "@/utils";
+import { useConnect } from "@/hooks/useConnect";
 
 const AudioDropContainer = styled("div", {
   display: "flex",
@@ -90,11 +90,11 @@ export const Upload = () => {
     index: 0,
   });
   const [currentTab, setCurrentTab] = useState<CurrentTab>("details");
-  const { walletAddress, connect } = useWallet();
-  const audioRef = useRef<(HTMLAudioElement | null)[]>([]);
   const [currentlyPlayingIndex, setCurrentlyPlayingIndex] = useState<
     null | number
   >(null);
+  const { walletAddress, connect } = useConnect();
+  const audioRef = useRef<(HTMLAudioElement | null)[]>([]);
 
   const form = useForm<UploadSchema>({
     resolver: zodResolver(uploadSchema),
@@ -288,7 +288,6 @@ export const Upload = () => {
     tracks.forEach((track) => {
       if (totalTrackLength <= 1) {
         append({
-          // data: track.data,
           file: track.file,
           url: track.url,
           metadata: {
@@ -296,6 +295,7 @@ export const Upload = () => {
             description: form.getValues("description"),
             artwork: form.getValues("releaseArtwork"),
             genre: form.getValues("genre"),
+            topics: form.getValues("topics"),
           },
         });
       } else {
@@ -327,6 +327,7 @@ export const Upload = () => {
     form.getValues("tracklist") && form.getValues("tracklist").length;
 
   const onSubmit = async (data: UploadSchema) => {
+    console.log(data);
     try {
       await upload(data, walletAddress);
       toast.success("Tracks successfully uploaded!");
@@ -359,620 +360,638 @@ export const Upload = () => {
 
   return (
     <Fullscreen>
-      <Flex direction="column">
-        <FormProvider {...form}>
-          <Container
-            css={{
-              pb: 120,
-            }}
-            as="form"
-            onSubmit={handleSubmit(onSubmit)}
-          >
-            <Tabs
-              onValueChange={(e) => {
-                setCurrentTab(e as CurrentTab);
+      <FormProvider {...form}>
+        <Box as="form" onSubmit={handleSubmit(onSubmit)}>
+          <Flex direction="column">
+            <Container
+              css={{
+                pb: 120,
               }}
-              css={{ width: "100%" }}
-              defaultValue={currentTab}
-              value={currentTab}
             >
-              <TabsList>
-                <TabsTrigger value="details">Release details</TabsTrigger>
-                <TabsTrigger disabled={!detailsValid()} value="tracklist">
-                  Tracklist
-                </TabsTrigger>
-                <TabsTrigger
-                  disabled={!detailsValid() || !tracklistValid()}
-                  value="monetization"
-                >
-                  Monetization
-                </TabsTrigger>
-                <TabsTrigger
-                  disabled={!detailsValid() || !tracklistValid()}
-                  value="review"
-                >
-                  Review
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="details">
-                <Flex gap="20">
-                  <Flex css={{ flex: 1 }} direction="column">
-                    <FormRow>
-                      <Label htmlFor="title">Title</Label>
-                      <TextField
-                        id="title"
-                        type="text"
-                        placeholder="Release Title"
-                        {...register("title")}
-                        size="3"
-                      />
-                      {errors.title && reactiveTitle.length < 1 && (
-                        <FormHelperError>
-                          {errors.title.message}
-                        </FormHelperError>
-                      )}
-                    </FormRow>
-                    <FormRow>
-                      <Label htmlFor="description">Description</Label>
-                      <Textarea
-                        size="3"
-                        id="description"
-                        placeholder="Release Description"
-                        {...register("description")}
-                      />
-                      {errors.description && reactiveDescription.length < 1 && (
-                        <FormHelperError>
-                          {errors.description.message}
-                        </FormHelperError>
-                      )}
-                    </FormRow>
-                    <FormRow>
-                      <Label htmlFor="genre">Genre</Label>
-                      <FormSelect name="genre" values={genres} />
-                    </FormRow>
-                    <FormRow>
-                      <Label htmlFor="topics">Additional Tags</Label>
-                      <TextField
-                        id="topics"
-                        type="text"
-                        placeholder="Comma-seperated list of tags describing the mood of your track"
-                        {...register("topics")}
-                        size="3"
-                      />
-                    </FormRow>
-                    <FormRow>
-                      <Label htmlFor="releaseDate">
-                        Release Date (optional)
-                      </Label>
-                      <TextField
-                        id="releaseDate"
-                        type="date"
-                        placeholder="Release Date"
-                        {...register("releaseDate")}
-                      />
-                      {errors.releaseDate && (
-                        <FormHelperError>
-                          {errors.releaseDate.message}
-                        </FormHelperError>
-                      )}
-                    </FormRow>
-                  </Flex>
-                  <FormRow
-                    css={{
-                      height: "max-content",
-                    }}
+              <Tabs
+                onValueChange={(e) => {
+                  setCurrentTab(e as CurrentTab);
+                }}
+                css={{ width: "100%" }}
+                defaultValue={currentTab}
+                value={currentTab}
+              >
+                <TabsList>
+                  <TabsTrigger value="details">Release details</TabsTrigger>
+                  <TabsTrigger disabled={!detailsValid()} value="tracklist">
+                    Tracklist
+                  </TabsTrigger>
+                  <TabsTrigger
+                    disabled={!detailsValid() || !tracklistValid()}
+                    value="monetization"
                   >
-                    <Label htmlFor="releaseArtwork">Cover Art</Label>
-                    <ImageDropzone
-                      name="releaseArtwork.file"
-                      hidden={!!reactiveArtwork?.url}
-                      size="3"
+                    Monetization
+                  </TabsTrigger>
+                  <TabsTrigger
+                    disabled={!detailsValid() || !tracklistValid()}
+                    value="review"
+                  >
+                    Review
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="details">
+                  <Flex gap="20">
+                    <Flex css={{ flex: 1 }} direction="column">
+                      <FormRow>
+                        <Label htmlFor="title">Title</Label>
+                        <TextField
+                          id="title"
+                          type="text"
+                          placeholder="Release Title"
+                          {...register("title")}
+                          size="3"
+                        />
+                        {errors.title && reactiveTitle.length < 1 && (
+                          <FormHelperError>
+                            {errors.title.message}
+                          </FormHelperError>
+                        )}
+                      </FormRow>
+                      <FormRow>
+                        <Label htmlFor="description">Description</Label>
+                        <Textarea
+                          size="3"
+                          id="description"
+                          placeholder="Release Description"
+                          {...register("description")}
+                        />
+                        {errors.description &&
+                          reactiveDescription.length < 1 && (
+                            <FormHelperError>
+                              {errors.description.message}
+                            </FormHelperError>
+                          )}
+                      </FormRow>
+                      <FormRow>
+                        <Label htmlFor="genre">Genre</Label>
+                        <FormSelect name="genre" values={genres} />
+                      </FormRow>
+                      <FormRow>
+                        <Label htmlFor="topics">Additional Tags</Label>
+                        <TextField
+                          id="topics"
+                          type="text"
+                          placeholder="Comma-seperated list of tags describing the mood of your track"
+                          {...register("topics")}
+                          size="3"
+                        />
+                      </FormRow>
+                      <FormRow>
+                        <Label htmlFor="releaseDate">
+                          Release Date (optional)
+                        </Label>
+                        <TextField
+                          id="releaseDate"
+                          type="date"
+                          placeholder="Release Date"
+                          {...register("releaseDate")}
+                        />
+                        {errors.releaseDate && (
+                          <FormHelperError>
+                            {errors.releaseDate.message}
+                          </FormHelperError>
+                        )}
+                      </FormRow>
+                    </Flex>
+                    <FormRow
+                      css={{
+                        height: "max-content",
+                      }}
                     >
-                      <RxPlus />
-                      <Typography
-                        size="1"
-                        css={{
-                          position: "absolute",
-                          bottom: "$5",
-                          textAlign: "center",
-                        }}
+                      <Label htmlFor="releaseArtwork">Cover Art</Label>
+                      <ImageDropzone
+                        name="releaseArtwork.file"
+                        hidden={!!reactiveArtwork?.url}
+                        size="3"
                       >
-                        Drag and drop your cover art <br /> or click to browse
-                      </Typography>
+                        <RxPlus />
+                        <Typography
+                          size="1"
+                          css={{
+                            position: "absolute",
+                            bottom: "$5",
+                            textAlign: "center",
+                          }}
+                        >
+                          Drag and drop your cover art <br /> or click to browse
+                        </Typography>
 
-                      {reactiveArtwork.url && (
-                        <>
-                          <Image
+                        {reactiveArtwork.url && (
+                          <>
+                            <Image
+                              css={{
+                                width: "100%",
+                                height: "100%",
+                                position: "absolute",
+                                inset: 0,
+                              }}
+                              src={reactiveArtwork.url}
+                            />
+                            <IconButton
+                              onClick={handleRemoveCoverArt}
+                              size="1"
+                              css={{
+                                br: "$round",
+                                backgroundColor: "$slate12",
+                                color: "$blackA12",
+                                position: "absolute",
+                                top: "-$2",
+                                right: "-$2",
+
+                                "&:hover": {
+                                  backgroundColor: "$slateSolidHover",
+                                },
+
+                                "& svg": {
+                                  display: "block",
+                                  width: "$5",
+                                  height: "$5",
+                                },
+                              }}
+                            >
+                              <RxTrash />
+                            </IconButton>
+                          </>
+                        )}
+                      </ImageDropzone>
+                      <Flex direction="column" gap="3">
+                        <FormHelperText css={{ position: "relative" }}>
+                          Cover art must be .jpg, .png, .webp or .avif <br />
+                          - Recommended size 2000x2000 <br />- Ensure you have
+                          rights to the image you choose
+                        </FormHelperText>
+                        {errors.releaseArtwork && !reactiveArtwork.file && (
+                          <FormHelperError
                             css={{
-                              width: "100%",
-                              height: "100%",
-                              position: "absolute",
-                              inset: 0,
-                            }}
-                            src={reactiveArtwork.url}
-                          />
-                          <IconButton
-                            onClick={handleRemoveCoverArt}
-                            size="1"
-                            css={{
-                              br: "$round",
-                              backgroundColor: "$slate12",
-                              color: "$blackA12",
-                              position: "absolute",
-                              top: "-$2",
-                              right: "-$2",
-
-                              "&:hover": {
-                                backgroundColor: "$slateSolidHover",
-                              },
-
-                              "& svg": {
-                                display: "block",
-                                width: "$5",
-                                height: "$5",
-                              },
+                              position: "relative",
                             }}
                           >
-                            <RxTrash />
-                          </IconButton>
-                        </>
-                      )}
-                    </ImageDropzone>
-                    <Flex direction="column" gap="3">
-                      <FormHelperText css={{ position: "relative" }}>
-                        Cover art must be .jpg, .png, .webp or .avif <br />
-                        - Recommended size 2000x2000 <br />- Ensure you have
-                        rights to the image you choose
-                      </FormHelperText>
-                      {errors.releaseArtwork && !reactiveArtwork.file && (
+                            {errors.releaseArtwork.file?.message}
+                          </FormHelperError>
+                        )}
+                      </Flex>
+                    </FormRow>
+                  </Flex>
+                </TabsContent>
+                <TabsContent value="tracklist">
+                  <Container
+                    css={
+                      {
+                        // maxWidth: 700,
+                      }
+                    }
+                  >
+                    <Flex
+                      css={{ mx: "auto", mt: "$10", width: "100%" }}
+                      direction="column"
+                      align="center"
+                      gap="10"
+                    >
+                      <Flex css={{ width: "100%" }} direction="column">
+                        {fields.map((track, index) => (
+                          <Flex
+                            key={track.id}
+                            css={{
+                              position: "relative",
+                              width: "100%",
+                              py: "$5",
+                              pr: "$10",
+                              pl: "$7",
+                              // br: "$3",
+
+                              "&:hover": {
+                                backgroundColor: "$slate2",
+                              },
+                            }}
+                            justify="between"
+                            align="center"
+                          >
+                            <Flex align="center" gap="5">
+                              <IconButton
+                                type="button"
+                                aria-label="Play/pause file"
+                                variant="ghost"
+                                size="3"
+                                onClick={() => handlePlayPause(index)}
+                              >
+                                {currentlyPlayingIndex === index ? (
+                                  <BsPauseFill />
+                                ) : (
+                                  <BsPlayFill />
+                                )}
+                              </IconButton>
+                              <audio
+                                ref={(el) => (audioRef.current[index] = el)}
+                                onEnded={() => setCurrentlyPlayingIndex(null)}
+                                src={track.url}
+                              ></audio>
+                              <Image
+                                src={
+                                  form.getValues("tracklist")[index].metadata
+                                    .artwork?.url
+                                }
+                                css={{
+                                  width: 40,
+                                  height: 40,
+                                }}
+                              />
+                              <Typography>{track.metadata.title}</Typography>
+                            </Flex>
+                            <Flex align="center" gap="1">
+                              <IconButton
+                                aria-label="Edit track details"
+                                type="button"
+                                onClick={() => handleShowDetailsDialog(index)}
+                                variant="ghost"
+                                size="2"
+                              >
+                                <RxPencil2 />
+                              </IconButton>
+                              <IconButton
+                                aria-label="Delete track from release"
+                                type="button"
+                                css={{
+                                  color: "$red10",
+
+                                  "&:hover": {
+                                    backgroundColor: "$red4",
+                                    color: "$red11",
+                                  },
+
+                                  "&:active": {
+                                    backgroundColor: "$red5",
+                                    // color: "$red11",
+                                  },
+                                }}
+                                onClick={() => remove(index)}
+                                variant="ghost"
+                                size="2"
+                              >
+                                <RxTrash />
+                              </IconButton>
+
+                              {errors.tracklist &&
+                                errors.tracklist[index] &&
+                                !trackValid(index) && (
+                                  <IconButton
+                                    variant="transparent"
+                                    as="span"
+                                    css={{
+                                      color: "$red10",
+                                      position: "absolute",
+                                      right: "$2",
+
+                                      "&:hover": {
+                                        color: "$red10",
+                                      },
+                                    }}
+                                  >
+                                    <BsFillExclamationCircleFill aria-label="Track contains errors" />
+                                  </IconButton>
+                                )}
+                            </Flex>
+
+                            <DetailsDialog
+                              track={track}
+                              form={form}
+                              index={index}
+                              open={
+                                showDetailsDialog.open &&
+                                index === showDetailsDialog.index
+                              }
+                              onClose={() => handleCancelDetailsDialog(index)}
+                            />
+                          </Flex>
+                        ))}
+                      </Flex>
+                      <AudioDropContainer {...audio.getRootProps()}>
+                        <input {...audio.getInputProps()} />
+                        <Flex gap="5" align="center">
+                          <Flex direction="column" align="center">
+                            <Typography css={{ color: "$slate12" }}>
+                              Drag your songs here
+                            </Typography>
+                            <Typography size="1">
+                              .mp3, .wav, .flac, .aiff
+                            </Typography>
+                          </Flex>
+                          <Typography>or</Typography>
+                          <Typography css={{ color: "$violet11" }}>
+                            Browse your computer
+                          </Typography>
+                        </Flex>
+                      </AudioDropContainer>
+                      {errors.tracklist && fields.length <= 0 && (
                         <FormHelperError
                           css={{
                             position: "relative",
                           }}
                         >
-                          {errors.releaseArtwork.file?.message}
+                          {errors.tracklist.message}
                         </FormHelperError>
                       )}
                     </Flex>
-                  </FormRow>
-                </Flex>
-              </TabsContent>
-              <TabsContent value="tracklist">
-                <Container
-                  css={
-                    {
-                      // maxWidth: 700,
-                    }
-                  }
-                >
+                  </Container>
+                </TabsContent>
+                <TabsContent value="monetization">
                   <Flex
-                    css={{ mx: "auto", mt: "$10", width: "100%" }}
+                    css={{ mt: "$10", $$formGap: "80px" }}
                     direction="column"
-                    align="center"
-                    gap="10"
+                    gap="3"
                   >
-                    <Flex css={{ width: "100%" }} direction="column">
-                      {fields.map((track, index) => (
-                        <Flex
-                          key={track.id}
-                          css={{
-                            position: "relative",
-                            width: "100%",
-                            py: "$5",
-                            pr: "$10",
-                            pl: "$7",
-                            // br: "$3",
-
-                            "&:hover": {
-                              backgroundColor: "$slate2",
-                            },
-                          }}
-                          justify="between"
-                          align="center"
-                        >
-                          <Flex align="center" gap="5">
-                            <IconButton
-                              type="button"
-                              aria-label="Play/pause file"
-                              variant="ghost"
-                              size="3"
-                              onClick={() => handlePlayPause(index)}
-                            >
-                              {currentlyPlayingIndex === index ? (
-                                <BsPauseFill />
-                              ) : (
-                                <BsPlayFill />
-                              )}
-                            </IconButton>
-                            <audio
-                              ref={(el) => (audioRef.current[index] = el)}
-                              onEnded={() => setCurrentlyPlayingIndex(null)}
-                              src={track.url}
-                            ></audio>
-                            <Image
-                              src={
-                                form.getValues("tracklist")[index].metadata
-                                  .artwork?.url
-                              }
-                              css={{
-                                width: 40,
-                                height: 40,
-                              }}
-                            />
-                            <Typography>{track.metadata.title}</Typography>
-                          </Flex>
-                          <Flex align="center" gap="1">
-                            <IconButton
-                              aria-label="Edit track details"
-                              type="button"
-                              onClick={() => handleShowDetailsDialog(index)}
-                              variant="ghost"
-                              size="2"
-                            >
-                              <RxPencil2 />
-                            </IconButton>
-                            <IconButton
-                              aria-label="Delete track from release"
-                              type="button"
-                              css={{
-                                color: "$red10",
-
-                                "&:hover": {
-                                  backgroundColor: "$red4",
-                                  color: "$red11",
-                                },
-
-                                "&:active": {
-                                  backgroundColor: "$red5",
-                                  // color: "$red11",
-                                },
-                              }}
-                              onClick={() => remove(index)}
-                              variant="ghost"
-                              size="2"
-                            >
-                              <RxTrash />
-                            </IconButton>
-
-                            {errors.tracklist &&
-                              errors.tracklist[index] &&
-                              !trackValid(index) && (
-                                <IconButton
-                                  variant="transparent"
-                                  as="span"
-                                  css={{
-                                    color: "$red10",
-                                    position: "absolute",
-                                    right: "$2",
-
-                                    "&:hover": {
-                                      color: "$red10",
-                                    },
-                                  }}
-                                >
-                                  <BsFillExclamationCircleFill aria-label="Track contains errors" />
-                                </IconButton>
-                              )}
-                          </Flex>
-
-                          <DetailsDialog
-                            track={track}
-                            form={form}
-                            index={index}
-                            open={
-                              showDetailsDialog.open &&
-                              index === showDetailsDialog.index
-                            }
-                            onClose={() => handleCancelDetailsDialog(index)}
-                          />
-                        </Flex>
-                      ))}
-                    </Flex>
-                    <AudioDropContainer {...audio.getRootProps()}>
-                      <input {...audio.getInputProps()} />
-                      <Flex gap="5" align="center">
-                        <Flex direction="column" align="center">
-                          <Typography css={{ color: "$slate12" }}>
-                            Drag your songs here
-                          </Typography>
-                          <Typography size="1">
-                            .mp3, .wav, .flac, .aiff
-                          </Typography>
-                        </Flex>
-                        <Typography>or</Typography>
-                        <Typography css={{ color: "$violet11" }}>
-                          Browse your computer
-                        </Typography>
-                      </Flex>
-                    </AudioDropContainer>
-                    {errors.tracklist && fields.length <= 0 && (
-                      <FormHelperError
-                        css={{
-                          position: "relative",
-                        }}
-                      >
-                        {errors.tracklist.message}
-                      </FormHelperError>
-                    )}
-                  </Flex>
-                </Container>
-              </TabsContent>
-              <TabsContent value="monetization">
-                <Flex
-                  css={{ mt: "$10", $$formGap: "80px" }}
-                  direction="column"
-                  gap="3"
-                >
-                  <FormRow>
-                    <Label htmlFor="tokenQuantity">Content tokens</Label>
-                    <TextField
-                      css={{ maxWidth: `calc(50% - $$formGap / 2)` }}
-                      size="3"
-                      type="number"
-                      defaultValue={getValues("tokenQuantity")}
-                      min={1}
-                      max={100}
-                      {...register("tokenQuantity")}
-                    />
-                    {errors.tokenQuantity && (
-                      <FormHelperError>
-                        {errors.tokenQuantity.message}
-                      </FormHelperError>
-                    )}
-                  </FormRow>
-                  <Typography>License information</Typography>
-                  <FormRow
-                    css={{
-                      maxWidth: `calc(50% - $$formGap / 2)`,
-                    }}
-                  >
-                    <Label htmlFor="license.type">UDL</Label>
-                    <FormSelect name="license.type" values={udl.type} />
-                    <Typography
+                    <FormRow>
+                      <Label htmlFor="tokenQuantity">Content tokens</Label>
+                      <TextField
+                        css={{ maxWidth: `calc(50% - $$formGap / 2)` }}
+                        size="3"
+                        type="number"
+                        defaultValue={getValues("tokenQuantity")}
+                        min={1}
+                        max={100}
+                        {...register("tokenQuantity")}
+                      />
+                      {errors.tokenQuantity && (
+                        <FormHelperError>
+                          {errors.tokenQuantity.message}
+                        </FormHelperError>
+                      )}
+                    </FormRow>
+                    <Typography>License information</Typography>
+                    <FormRow
                       css={{
-                        mt: "$1",
-                        textDecoration: "underline",
-                        cursor: "pointer",
-                        alignSelf: "start",
-
-                        "&:hover": {
-                          color: "$slate12",
-                        },
+                        maxWidth: `calc(50% - $$formGap / 2)`,
                       }}
-                      as="a"
-                      href="https://arwiki.wiki/#/en/Universal-Data-License-How-to-use-it"
-                      size="1"
                     >
-                      What is UDL?
-                    </Typography>
-                  </FormRow>
-                  {watch("license.type") !== "attribution" &&
-                    watch("license.type") !== "public-use" && (
-                      <Flex
-                        justify="between"
+                      <Label htmlFor="license.type">UDL</Label>
+                      <FormSelect name="license.type" values={udl.type} />
+                      <Typography
                         css={{
-                          gap: "$$formGap",
+                          mt: "$1",
+                          textDecoration: "underline",
+                          cursor: "pointer",
+                          alignSelf: "start",
+
+                          "&:hover": {
+                            color: "$slate12",
+                          },
                         }}
+                        as="a"
+                        href="https://arwiki.wiki/#/en/Universal-Data-License-How-to-use-it"
+                        size="1"
                       >
+                        What is UDL?
+                      </Typography>
+                    </FormRow>
+                    {watch("license.type") !== "attribution" &&
+                      watch("license.type") !== "public-use" && (
                         <Flex
+                          justify="between"
                           css={{
-                            flex: 1,
-                            maxWidth: `calc(50% - $$formGap / 2)`,
+                            gap: "$$formGap",
                           }}
-                          direction="column"
-                          gap="5"
                         >
-                          <FormRow>
-                            <Label htmlFor="license.derivation">
-                              Derivation Options
-                            </Label>
-                            <FormSelect
-                              name="license.derivation"
-                              values={udl.derivationOpts}
-                            />
-                          </FormRow>
-                          {watch("license.derivation") ===
-                            "with-revenue-share" && (
+                          <Flex
+                            css={{
+                              flex: 1,
+                              maxWidth: `calc(50% - $$formGap / 2)`,
+                            }}
+                            direction="column"
+                            gap="5"
+                          >
                             <FormRow>
-                              <Label htmlFor="license.revShare">
-                                Revenue Share Percentage
-                              </Label>
-                              <TextField
-                                size="3"
-                                type="number"
-                                defaultValue={getValues("license.revShare")}
-                                min={1}
-                                max={100}
-                                placeholder="Enter a percentage"
-                                {...register("license.revShare")}
-                              />
-                              {errors.license?.revShare && (
-                                <FormHelperError>
-                                  {errors.license?.revShare.message}
-                                </FormHelperError>
-                              )}
-                            </FormRow>
-                          )}
-                        </Flex>
-                        {watch("license.type") !== "noncommercial" && (
-                          <Flex css={{ flex: 1 }} direction="column" gap="5">
-                            <FormRow>
-                              <Label htmlFor="license.commercial">
-                                Commercial Use
+                              <Label htmlFor="license.derivation">
+                                Derivation Options
                               </Label>
                               <FormSelect
-                                name="license.commercial"
-                                values={udl.commercialOpts}
+                                name="license.derivation"
+                                values={udl.derivationOpts}
                               />
                             </FormRow>
-                            {watch("license.commercial") === "with-fee" && (
-                              <>
-                                <Flex gap="3">
-                                  <FormRow css={{ flex: 1 }}>
-                                    <Label htmlFor="license.commercialFee">
-                                      Fee
-                                    </Label>
-                                    <ControlGroup isSelect>
-                                      <TextField
-                                        size="3"
-                                        type="number"
-                                        min={1}
-                                        max={100}
-                                        defaultValue={getValues(
-                                          "license.commercialFee"
-                                        )}
-                                        {...register("license.commercialFee")}
-                                      />
-                                      <FormSelect
-                                        name="license.currency"
-                                        values={udl.currencyOpts}
-                                      />
-                                    </ControlGroup>
-                                    {errors.license?.commercialFee && (
-                                      <FormHelperError>
-                                        {errors.license?.commercialFee.message}
-                                      </FormHelperError>
-                                    )}
-                                  </FormRow>
-                                  <FormRow>
-                                    <Label htmlFor="license.feeRecurrence">
-                                      Recurrence
-                                    </Label>
-                                    <FormSelect
-                                      name="license.feeRecurrence"
-                                      values={udl.feeRecurrenceOpts}
-                                    />
-                                  </FormRow>
-                                </Flex>
-                                <FormRow>
-                                  <Label htmlFor="license.paymentMode">
-                                    Payment Mode
-                                  </Label>
-                                  <FormSelect
-                                    name="license.paymentMode"
-                                    values={udl.paymentModeOpts}
-                                  />
-                                </FormRow>
-                              </>
+                            {watch("license.derivation") ===
+                              "with-revenue-share" && (
+                              <FormRow>
+                                <Label htmlFor="license.revShare">
+                                  Revenue Share Percentage
+                                </Label>
+                                <TextField
+                                  size="3"
+                                  type="number"
+                                  defaultValue={getValues("license.revShare")}
+                                  min={1}
+                                  max={100}
+                                  placeholder="Enter a percentage"
+                                  {...register("license.revShare")}
+                                />
+                                {errors.license?.revShare && (
+                                  <FormHelperError>
+                                    {errors.license?.revShare.message}
+                                  </FormHelperError>
+                                )}
+                              </FormRow>
                             )}
                           </Flex>
-                        )}
-                      </Flex>
-                    )}
-                </Flex>
-              </TabsContent>
-              <TabsContent value="review">
-                <Typography css={{ mt: "$10" }} as="h3" contrast="hi">
-                  Review and upload
-                </Typography>
-                <Flex css={{ mt: "$10" }} justify="between" gap="20">
-                  <Flex css={{ flex: 1 }} direction="column" gap="7">
-                    <Box>
-                      <Typography size="4" weight="6" contrast="hi">
-                        {getValues("title")}
-                      </Typography>
-                      {isAlbum ? (
-                        <Typography>Album release, {tracks} tracks</Typography>
-                      ) : (
-                        <Typography>Single release, {tracks} track</Typography>
+                          {watch("license.type") !== "noncommercial" && (
+                            <Flex css={{ flex: 1 }} direction="column" gap="5">
+                              <FormRow>
+                                <Label htmlFor="license.commercial">
+                                  Commercial Use
+                                </Label>
+                                <FormSelect
+                                  name="license.commercial"
+                                  values={udl.commercialOpts}
+                                />
+                              </FormRow>
+                              {watch("license.commercial") === "with-fee" && (
+                                <>
+                                  <Flex gap="3">
+                                    <FormRow css={{ flex: 1 }}>
+                                      <Label htmlFor="license.commercialFee">
+                                        Fee
+                                      </Label>
+                                      <ControlGroup isSelect>
+                                        <TextField
+                                          size="3"
+                                          type="number"
+                                          min={1}
+                                          max={100}
+                                          defaultValue={getValues(
+                                            "license.commercialFee"
+                                          )}
+                                          {...register("license.commercialFee")}
+                                        />
+                                        <FormSelect
+                                          name="license.currency"
+                                          values={udl.currencyOpts}
+                                        />
+                                      </ControlGroup>
+                                      {errors.license?.commercialFee && (
+                                        <FormHelperError>
+                                          {
+                                            errors.license?.commercialFee
+                                              .message
+                                          }
+                                        </FormHelperError>
+                                      )}
+                                    </FormRow>
+                                    <FormRow>
+                                      <Label htmlFor="license.feeRecurrence">
+                                        Recurrence
+                                      </Label>
+                                      <FormSelect
+                                        name="license.feeRecurrence"
+                                        values={udl.feeRecurrenceOpts}
+                                      />
+                                    </FormRow>
+                                  </Flex>
+                                  <FormRow>
+                                    <Label htmlFor="license.paymentMode">
+                                      Payment Mode
+                                    </Label>
+                                    <FormSelect
+                                      name="license.paymentMode"
+                                      values={udl.paymentModeOpts}
+                                    />
+                                  </FormRow>
+                                </>
+                              )}
+                            </Flex>
+                          )}
+                        </Flex>
                       )}
-                    </Box>
-                    <Box>
-                      <Typography>Release Description</Typography>
-                      <Typography contrast="hi">
-                        {getValues("description") || "-"}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography>Genre</Typography>
-                      <Typography contrast="hi">
-                        {getValues("genre")}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography>Additional Tags</Typography>
-                      <Typography contrast="hi">
-                        {getValues("topics") || "-"}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography>License</Typography>
-                      <Typography contrast="hi">
-                        {formatSchemaValue(getValues("license.type"))}
-                      </Typography>
-                    </Box>
                   </Flex>
-                  <Image
-                    css={{
-                      width: 400,
-                      height: 400,
-                    }}
-                    src={getValues("releaseArtwork.url")}
-                  />
-                </Flex>
-              </TabsContent>
-            </Tabs>
-          </Container>
-        </FormProvider>
-      </Flex>
-      <Box
-        css={{
-          borderTop: "$slate6 1px solid",
-          backgroundColor: "$blackA11",
-          backdropFilter: "blur(4px)",
-          position: "fixed",
-          right: 0,
-          left: 0,
-          bottom: 0,
-        }}
-      >
-        <Container
-          css={{
-            justifyContent: currentTab === "details" ? "end" : "space-between",
+                </TabsContent>
+                <TabsContent value="review">
+                  <Typography css={{ mt: "$10" }} as="h3" contrast="hi">
+                    Review and upload
+                  </Typography>
+                  <Flex css={{ mt: "$10" }} justify="between" gap="20">
+                    <Flex css={{ flex: 1 }} direction="column" gap="7">
+                      <Box>
+                        <Typography size="4" weight="6" contrast="hi">
+                          {getValues("title")}
+                        </Typography>
+                        {isAlbum ? (
+                          <Typography>
+                            Album release, {tracks} tracks
+                          </Typography>
+                        ) : (
+                          <Typography>
+                            Single release, {tracks} track
+                          </Typography>
+                        )}
+                      </Box>
+                      <Box>
+                        <Typography>Release Description</Typography>
+                        <Typography contrast="hi">
+                          {getValues("description") || "-"}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography>Genre</Typography>
+                        <Typography contrast="hi">
+                          {getValues("genre")}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography>Additional Tags</Typography>
+                        <Typography contrast="hi">
+                          {getValues("topics") || "-"}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography>License</Typography>
+                        <Typography contrast="hi">
+                          {formatSchemaValue(getValues("license.type"))}
+                        </Typography>
+                      </Box>
+                    </Flex>
+                    <Image
+                      css={{
+                        width: 400,
+                        height: 400,
+                      }}
+                      src={getValues("releaseArtwork.url")}
+                    />
+                  </Flex>
+                </TabsContent>
+              </Tabs>
+            </Container>
+          </Flex>
+          <Box
+            css={{
+              borderTop: "$slate6 1px solid",
+              backgroundColor: "$blackA11",
+              backdropFilter: "blur(4px)",
+              position: "fixed",
+              right: 0,
+              left: 0,
+              bottom: 0,
+            }}
+          >
+            <Container
+              css={{
+                justifyContent:
+                  currentTab === "details" ? "end" : "space-between",
 
-            py: "$5",
-          }}
-        >
-          {currentTab !== "details" && (
-            <Button onClick={handlePrevious} variant="outline">
-              Back
-            </Button>
-          )}
-          {currentTab !== "review" && (
-            <Button
-              onClick={handleNext}
-              variant="solid"
-              css={{ alignSelf: "end" }}
+                py: "$5",
+              }}
             >
-              Next
-            </Button>
-          )}
-          {currentTab === "review" && (
-            <>
-              {walletAddress ? (
-                <Button type="submit" variant="solid">
-                  Submit
-                </Button>
-              ) : (
+              {currentTab !== "details" && (
                 <Button
                   type="button"
-                  onClick={() =>
-                    connect([
-                      "ACCESS_ADDRESS",
-                      "ACCESS_PUBLIC_KEY",
-                      "SIGNATURE",
-                      "SIGN_TRANSACTION",
-                    ])
-                  }
-                  variant="solid"
+                  onClick={handlePrevious}
+                  variant="outline"
                 >
-                  Connect to submit
+                  Back
                 </Button>
               )}
-            </>
-          )}
-        </Container>
-      </Box>
+              {currentTab !== "review" && (
+                <Button
+                  type="button"
+                  onClick={handleNext}
+                  variant="solid"
+                  css={{ alignSelf: "end" }}
+                >
+                  Next
+                </Button>
+              )}
+              {currentTab === "review" && (
+                <>
+                  {walletAddress ? (
+                    <Button type="submit" variant="solid">
+                      Submit
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      onClick={() =>
+                        connect({
+                          appName: "Radar",
+                          walletProvider: "arconnect",
+                          permissions: [
+                            "ACCESS_ADDRESS",
+                            "ACCESS_PUBLIC_KEY",
+                            "SIGNATURE",
+                            "SIGN_TRANSACTION",
+                          ],
+                        })
+                      }
+                      variant="solid"
+                    >
+                      Connect to submit
+                    </Button>
+                  )}
+                </>
+              )}
+            </Container>
+          </Box>
+        </Box>
+      </FormProvider>
     </Fullscreen>
   );
 };
