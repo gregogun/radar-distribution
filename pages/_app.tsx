@@ -6,6 +6,7 @@ import { ThemeProvider } from "next-themes";
 import type { AppProps } from "next/app";
 import { Toaster } from "sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { IrysProvider } from "@/hooks/useIrys";
 
 const globalStyles = globalCss({
   "*, *::before, *::after": {
@@ -47,14 +48,16 @@ export default function App({ Component, pageProps }: AppProps) {
         value={{ light: "light-theme", dark: darkTheme.className }}
         enableSystem
       >
-        <ConnectProvider
-          webWallet={webWallet}
-          includeProfile
-          detectWalletSwitch
-        >
-          <Toaster richColors position="bottom-right" />
-          <Component {...pageProps} />
-        </ConnectProvider>
+        <IrysProvider>
+          <ConnectProvider
+            webWallet={webWallet}
+            includeProfile
+            detectWalletSwitch
+          >
+            <Toaster richColors position="bottom-right" />
+            <Component {...pageProps} />
+          </ConnectProvider>
+        </IrysProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

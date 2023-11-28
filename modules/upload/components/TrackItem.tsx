@@ -1,11 +1,13 @@
 import { getDuration } from "@/lib/audioDuration";
 import { Box } from "@/ui/Box";
+import { Button } from "@/ui/Button";
 import { Flex } from "@/ui/Flex";
 import { Image } from "@/ui/Image";
 import { Progress, ProgressIndicator } from "@/ui/Progress";
 import { Typography } from "@/ui/Typography";
 import { formatDuration } from "@/utils";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import {
   RxCheck,
   RxCheckCircled,
@@ -51,6 +53,10 @@ export const TrackItem = ({ track }: TrackItemProps) => {
       break;
   }
 
+  useEffect(() => {
+    console.log(track);
+  }, []);
+
   return (
     <Box
       css={{
@@ -74,6 +80,21 @@ export const TrackItem = ({ track }: TrackItemProps) => {
           </Typography>
         </Flex>
         <Flex align="center" gap="3">
+          {track.upload.status === "success" && track.upload.tx && (
+            <Button
+              css={{
+                cursor: "pointer",
+              }}
+              target="_blank"
+              rel="noreferrer"
+              href={`https://arcadia.arweave.dev/#/track?tx=${track.upload.tx}`}
+              as="a"
+              variant="solid"
+              size="1"
+            >
+              View Track
+            </Button>
+          )}
           {track.metadata.genre !== "none" && (
             <Typography
               size="1"
@@ -134,6 +155,9 @@ export const TrackItem = ({ track }: TrackItemProps) => {
             (track.upload.status === "idle" && <RxCrossCircled />)}
           {track.upload.status === "success" && <RxCheckCircled />}
           {track.upload.status === "in-progress" && <RxLapTimer />}
+          {track.upload.status === "success" &&
+            !track.upload.registered &&
+            " - (not registered)"}
         </Typography>
       </Flex>
     </Box>

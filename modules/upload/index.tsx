@@ -30,11 +30,14 @@ import { ImageDropzone } from "./components/Dropzone";
 import { FormSelect } from "./components/FormSelect";
 import { udl } from "@/data/license";
 import { ControlGroup } from "@/ui/ControlGroup";
-import { formatSchemaValue, formatDuration } from "@/utils";
+import { formatSchemaValue, formatDuration, abbreviateAddress } from "@/utils";
 import { useConnect } from "@/hooks/useConnect";
 import { useQuery } from "@tanstack/react-query";
 import { TrackItem } from "./components/TrackItem";
 import { getTotalDuration } from "@/lib/audioDuration";
+import { getAccount } from "@/lib/account/api";
+import { appConfig } from "@/appConfig";
+import { useIrys } from "@/hooks/useIrys";
 
 const AudioDropContainer = styled("div", {
   display: "flex",
@@ -96,7 +99,8 @@ export const Upload = () => {
   const [currentlyPlayingIndex, setCurrentlyPlayingIndex] = useState<
     null | number
   >(null);
-  const { walletAddress, connect } = useConnect();
+  const { walletAddress, connect, connecting } = useConnect();
+  const irysOpts = useIrys();
   const audioRef = useRef<(HTMLAudioElement | null)[]>([]);
 
   const form = useForm<UploadSchema>({
@@ -268,6 +272,7 @@ export const Upload = () => {
               upload: {
                 progress: 0,
                 status: "idle",
+                registered: false,
               },
             };
             resolve(track);
@@ -307,6 +312,7 @@ export const Upload = () => {
           upload: {
             progress: 0,
             status: "idle",
+            registered: false,
           },
         });
       } else {
@@ -340,9 +346,12 @@ export const Upload = () => {
   const onSubmit = async (data: UploadSchema) => {
     console.log(data);
     try {
-      await upload(data, walletAddress);
+      await upload(data, walletAddress, form, irysOpts);
       toast.success("Tracks successfully uploaded!");
     } catch (error) {
+      if (form.formState.isSubmitting) {
+        form.formState.isSubmitting = false;
+      }
       console.error(error);
       toast.error("Upload error. Please try again.");
     }
@@ -373,6 +382,18 @@ export const Upload = () => {
     queryKey: ["totalDuration"],
     enabled: !!getValues("tracklist") && currentTab === "review",
     queryFn: () => getTotalDuration(getValues("tracklist")),
+  });
+
+  const { data: profile, isError } = useQuery({
+    queryKey: [`profile-${walletAddress}`],
+    enabled: !!walletAddress,
+    queryFn: () => {
+      if (!walletAddress) {
+        return;
+      }
+
+      return getAccount(walletAddress, { gateway: appConfig.defaultGateway });
+    },
   });
 
   return (
@@ -923,20 +944,32 @@ export const Upload = () => {
                             </Typography>
                           </Box>
                           <Flex gap="1" align="center">
-                            {/* temp */}
-                            <Image
-                              css={{
-                                boxSize: "$5",
-                                br: "$round",
-                              }}
-                              src={getValues("releaseArtwork.url")}
-                            />
-                            <Typography contrast="hi" size="2" weight="5">
-                              Winston Arnold
-                            </Typography>
-                            <Typography contrast="hi" size="2">
-                              •
-                            </Typography>
+                            {walletAddress && (
+                              <>
+                                <Image
+                                  css={{
+                                    boxSize: "$5",
+                                    br: "$round",
+                                  }}
+                                  src={
+                                    profile && profile.avatar
+                                      ? profile.avatar
+                                      : `https://source.boringavatars.com/marble/20/${
+                                          profile?.address || walletAddress
+                                        }`
+                                  }
+                                />
+                                <Typography contrast="hi" size="2" weight="5">
+                                  {profile?.handle ||
+                                    abbreviateAddress({
+                                      address: walletAddress,
+                                    })}
+                                </Typography>
+                                <Typography contrast="hi" size="2">
+                                  •
+                                </Typography>
+                              </>
+                            )}
                             <Typography contrast="hi" size="2">
                               1 track
                             </Typography>
@@ -995,7 +1028,7 @@ export const Upload = () => {
                     <Box css={{ height: 1, backgroundColor: "$slate5" }} />
                     {form.getValues("tracklist")?.length && (
                       <Flex direction="column">
-                        {form.getValues("tracklist").map((track) => (
+                        {form.watch("tracklist").map((track) => (
                           <TrackItem key={track.url} track={track} />
                         ))}
                       </Flex>
@@ -1046,11 +1079,19 @@ export const Upload = () => {
               {currentTab === "review" && (
                 <>
                   {walletAddress ? (
-                    <Button type="submit" variant="solid">
-                      Submit
+                    <Button
+                      disabled={
+                        form.formState.isSubmitting ||
+                        form.formState.isSubmitSuccessful
+                      }
+                      type="submit"
+                      variant="solid"
+                    >
+                      {form.formState.isSubmitting ? "Submitting..." : "Submit"}
                     </Button>
                   ) : (
                     <Button
+                      disabled={connecting}
                       type="button"
                       onClick={() =>
                         connect({
@@ -1066,7 +1107,7 @@ export const Upload = () => {
                       }
                       variant="solid"
                     >
-                      Connect to submit
+                      {connecting ? "Connecting..." : "Connect to submit"}
                     </Button>
                   )}
                 </>

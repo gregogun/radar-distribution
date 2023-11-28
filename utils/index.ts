@@ -75,10 +75,10 @@ export const formatDuration = ({
   const hours: number = Math.floor(duration / 3600);
 
   const hoursText = hours === 1 ? "hour" : "hours";
-  const minutesText = minutes === 1 ? "minute" : "minutes";
+  const minutesText = minutes === 1 ? "min" : "mins";
 
   const formattedSeconds: string = suffix
-    ? `${seconds < 10 ? "0" : ""}${seconds} ${seconds === 1 ? "sec" : "secs"}`
+    ? `${seconds} ${seconds === 1 ? "sec" : "secs"}`
     : `${seconds < 10 ? "0" : ""}${seconds}`;
 
   if (hours > 0) {

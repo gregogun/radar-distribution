@@ -36,7 +36,7 @@ const NavLink = styled(Link, {
 });
 
 export const AppHeader = () => {
-  const { walletAddress } = useConnect();
+  const { walletAddress, connecting } = useConnect();
   const location = useLocation();
   const { resolvedTheme, setTheme } = useTheme();
 
@@ -86,14 +86,7 @@ export const AppHeader = () => {
           Radar
         </Link>
       </Flex>
-      {/* <Flex as="nav" gap="5" justify="center">
-        <NavLink selected={location.pathname === "/"} to={"/"}>
-          discover
-        </NavLink>
-        <NavLink selected={location.pathname === "/profile"} to={"/profile"}>
-          profile
-        </NavLink>
-      </Flex> */}
+
       <Flex align="center" justify="end" gap="2">
         <IconButton
           css={{
@@ -121,6 +114,7 @@ export const AppHeader = () => {
               "SIGN_TRANSACTION",
               "ACCESS_ARWEAVE_CONFIG",
               "ACCESS_PUBLIC_KEY",
+              "SIGNATURE",
             ]}
             options={{
               connectButtonVariant: "ghost",
@@ -145,7 +139,7 @@ export const AppHeader = () => {
               }}
               variant="transparent"
             >
-              connect wallet
+              {connecting ? "connecting..." : "connect wallet"}
             </Button>
           </ConnectWallet>
         )}

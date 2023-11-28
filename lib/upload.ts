@@ -1,12 +1,16 @@
 import { Track, UploadSchema } from "@/modules/upload/schema";
-import { uploadData, uploadFile } from "./irys";
-import { TransactionTags } from "@/types";
+import { getIrys, uploadData, uploadFile } from "./irys";
+import { IrysOpts, TransactionTags } from "@/types";
 import { appConfig } from "@/appConfig";
 import { warp } from "./arweave";
+import fileReaderStream from "filereader-stream";
+import { UseFormReturn } from "react-hook-form";
 
 export const upload = async (
   data: UploadSchema,
-  address: string | undefined
+  address: string | undefined,
+  form: UseFormReturn<UploadSchema>,
+  irysOpts: IrysOpts
 ) => {
   try {
     if (!address) {
@@ -22,10 +26,29 @@ export const upload = async (
     artworkTx = await uploadArtwork(data.releaseArtwork);
 
     /* upload tracks individually */
-    const trackTxs = await uploadTracks(data, address, artworkTx);
+    const trackTxs = await uploadTracks(
+      data,
+      address,
+      artworkTx,
+      form,
+      irysOpts
+    );
 
     //register track txs
-    await registerTxs(trackTxs);
+    await Promise.all(
+      trackTxs.map(async (id) => {
+        await warp.register(id, irysOpts?.init?.node || "node2").then((res) => {
+          const index = data.tracklist.findIndex(
+            (track) => track.upload.tx === res.contractTxId
+          );
+          form.setValue(`tracklist.${index}.upload.registered`, true);
+          console.log(`asset registered - ${res.contractTxId}`);
+        });
+        await new Promise((r) => setTimeout(r, 1000));
+      })
+    ).then(() => {
+      console.log("assets successfully registered");
+    });
 
     let collectionTx: string | undefined = "";
 
@@ -41,7 +64,9 @@ export const upload = async (
 const uploadTracks = async (
   data: UploadSchema,
   address: string,
-  artworkId: string
+  artworkId: string,
+  form: UseFormReturn<UploadSchema>,
+  irysOpts: IrysOpts
 ): Promise<string[]> => {
   // empty array to fill with successfully uploaded tracks
   let uploadedTracks: string[] = [];
@@ -66,6 +91,9 @@ const uploadTracks = async (
         await uploadFile(track.metadata.artwork.file, imageTags)
       ).id;
     }
+
+    //test tags
+    tags = tags.concat({ name: "Env", value: "Test" });
 
     //ans-110 tags
     tags = tags.concat({ name: "Content-Type", value: track.file.type });
@@ -172,19 +200,68 @@ const uploadTracks = async (
       }
     }
 
-    console.log(tags);
-    const trackTx = await uploadFile(track.file, tags);
-    uploadedTracks.concat(trackTx.id);
-    console.log(trackTx);
-    // try {
-    // } catch (error) {
-    //   throw error;
-    // }
+    let totalChunks = 0;
 
-    // return uploadedTracks;
+    console.log(tags);
+    // set user-preferred node
+    const irys = await getIrys({ init: { node: irysOpts.init?.node } });
+
+    const uploader = irys.uploader.chunkedUploader;
+
+    const chunkSize = 25000000;
+    uploader.setChunkSize(chunkSize);
+
+    // create data stream
+    const dataStream = fileReaderStream(track.file);
+
+    if (track.file.size < chunkSize) {
+      totalChunks = 1;
+    } else {
+      totalChunks = Math.floor((track.file.size || 0) / chunkSize);
+    }
+
+    uploader.on("chunkUpload", (chunkInfo) => {
+      const chunkNumber = chunkInfo.id + 1;
+      if (form.getValues(`tracklist.${i}.upload.status`) === "idle") {
+        form.setValue(`tracklist.${i}.upload.status`, "in-progress");
+      }
+
+      // update track progress based on how much has been uploaded
+      if (chunkNumber >= totalChunks) {
+        form.setValue(`tracklist.${i}.upload.progress`, 100);
+      } else {
+        form.setValue(
+          `tracklist.${i}.upload.progress`,
+          (chunkNumber / totalChunks) * 100
+        );
+      }
+    });
+
+    uploader.on("chunkError", (e) => {
+      form.setValue(`tracklist.${i}.upload.status`, "failed");
+      console.error(
+        `Error uploading chunk number ${e.id} - ${e.res.statusText}`
+      );
+    });
+
+    uploader.on("done", (res) => {
+      form.setValue(`tracklist.${i}.upload.progress`, 100);
+    });
+
+    try {
+      const result = await uploader.uploadData(dataStream, {
+        tags,
+      });
+      console.log(`upload completed with ID ${result.data.id}`);
+      form.setValue(`tracklist.${i}.upload.tx`, result.data.id);
+      form.setValue(`tracklist.${i}.upload.status`, "success");
+      uploadedTracks.push(result.data.id);
+    } catch (error) {
+      form.setValue(`tracklist.${i}.upload.status`, "failed");
+      throw error;
+    }
   }
 
-  // return array of uploaded tracks
   return uploadedTracks;
 };
 
@@ -237,12 +314,4 @@ const uploadArtwork = async (artwork: UploadSchema["releaseArtwork"]) => {
   const artworkTx = await uploadFile(artwork.file, tags);
 
   return artworkTx.id;
-};
-
-const registerTxs = async (txs: string[]) => {
-  txs.forEach(async (tx) => {
-    await warp.register(tx, "node2");
-    await new Promise((r) => setTimeout(r, 1000));
-    console.log(`registering - ${tx}`);
-  });
 };

@@ -48,14 +48,14 @@ export const DropdownMenuArrow = styled(DropdownMenu.Arrow, { fill: "white" });
 
 export const itemStyles = {
   all: "unset",
-  fontSize: 13,
-  lineHeight: 1,
+  fontSize: "$1",
+  lineHeight: "$1",
   color: "$slate11",
   borderRadius: 3,
   display: "flex",
   alignItems: "center",
   px: "$3",
-  height: 20,
+  height: 40,
   position: "relative",
   userSelect: "none",
 
@@ -75,7 +75,10 @@ export const DropdownMenuCheckboxItem = styled(
   DropdownMenu.CheckboxItem,
   itemStyles
 );
-export const DropdownMenuRadioItem = styled(DropdownMenu.RadioItem, itemStyles);
+export const DropdownMenuRadioGroup = styled(DropdownMenu.RadioGroup);
+export const DropdownMenuRadioItem = styled(DropdownMenu.RadioItem, {
+  ...itemStyles,
+});
 export const DropdownMenuSubTrigger = styled(DropdownMenu.SubTrigger, {
   '&[data-state="open"]': {
     backgroundColor: "$slate4",
@@ -85,10 +88,10 @@ export const DropdownMenuSubTrigger = styled(DropdownMenu.SubTrigger, {
 });
 
 export const DropdownMenuLabel = styled(DropdownMenu.Label, {
-  paddingLeft: 25,
-  fontSize: 12,
+  paddingLeft: "$3",
+  fontSize: 11,
   lineHeight: "25px",
-  color: "$slate11",
+  color: "$slate10",
 });
 
 export const DropdownMenuSeparator = styled(DropdownMenu.Separator, {
@@ -100,7 +103,7 @@ export const DropdownMenuSeparator = styled(DropdownMenu.Separator, {
 export const DropdownMenuItemIndicator = styled(DropdownMenu.ItemIndicator, {
   position: "absolute",
   left: 0,
-  width: 25,
+  width: 12,
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",

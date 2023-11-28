@@ -60,6 +60,7 @@ const trackSchema = z.object({
       .default("idle"),
     progress: z.number().default(0),
     tx: z.string().nullish(),
+    registered: z.boolean(),
   }),
 });
 

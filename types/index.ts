@@ -48,6 +48,31 @@ export type ArweaveConfig = {
 
 export type Vouched = boolean;
 
+export type IrysOpts = {
+  init?: {
+    token?: string;
+    provider?: object;
+    node?: "node1" | "node2";
+  };
+  uploader?: {
+    batchSize?: number;
+    chunkSize?: number;
+  };
+  setState: React.Dispatch<
+    React.SetStateAction<{
+      init?: {
+        token?: string;
+        provider?: object;
+        node?: "node1" | "node2";
+      };
+      uploader?: {
+        batchSize?: number;
+        chunkSize?: number;
+      };
+    }>
+  >;
+};
+
 export type IrysNode = "node1" | "node2";
 
 export declare const WebWallet: {
