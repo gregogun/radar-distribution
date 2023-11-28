@@ -1,5 +1,6 @@
 import Arweave from "arweave";
 import { WarpFactory } from "warp-contracts";
+import { DeployPlugin } from "warp-contracts-plugin-deploy";
 import BigNumber from "bignumber.js";
 
 export const arweave = Arweave.init({});
@@ -11,4 +12,4 @@ export const getArBalance = async (address: string) => {
   return new BigNumber(arBalance);
 };
 
-export const warp = WarpFactory.forMainnet();
+export const warp = WarpFactory.forMainnet().use(new DeployPlugin());

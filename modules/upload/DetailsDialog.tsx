@@ -92,9 +92,11 @@ export const DetailsDialog = ({
       const description =
         form.getValues("tracklist")[index].metadata.description;
       const topics = form.getValues("tracklist")[index].metadata.topics;
+      const genre = form.getValues("tracklist")[index].metadata.genre;
       const releaseTitle = form.getValues("title");
       const releaseDescription = form.getValues("description");
       const releaseTopics = form.getValues("topics");
+      const releaseGenre = form.getValues("genre");
 
       if (title !== releaseTitle) {
         form.setValue(`tracklist.${index}.metadata.title`, releaseTitle);
@@ -113,6 +115,10 @@ export const DetailsDialog = ({
 
       if (topics && topics !== releaseTopics) {
         form.setValue(`tracklist.${index}.metadata.topics`, releaseTopics);
+      }
+
+      if (genre !== releaseGenre) {
+        form.setValue(`tracklist.${index}.metadata.genre`, releaseGenre);
       }
     }
   }, [form.getValues("tracklist")]);

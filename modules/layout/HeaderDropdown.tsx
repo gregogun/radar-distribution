@@ -12,8 +12,13 @@ import { ArAccount } from "arweave-account";
 import {
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuItemIndicator,
+  DropdownMenuLabel,
   DropdownMenuPortal,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuRoot,
+  DropdownMenuSeparator,
   DropdownMenuSubContent,
   DropdownMenuSubRoot,
   DropdownMenuSubTrigger,
@@ -29,6 +34,7 @@ import { PermaProfile } from "@/types";
 import { FundNodeDialog } from "../wallet/FundNodeDialog";
 import { useQuery } from "@tanstack/react-query";
 import { getAccount } from "@/lib/account/api";
+import { useIrys } from "@/hooks/useIrys";
 
 const StyledLink = styled(Link);
 
@@ -38,7 +44,7 @@ interface HeaderDropdownProps {
 
 export const HeaderDropdown = ({ walletAddress }: HeaderDropdownProps) => {
   const { setState } = useConnect();
-  // const [showFundNodeDialog, setShowFundNodeDialog] = useState(false);
+  const { init: irysInitOpts, setState: setIrys } = useIrys();
   const [currentGateway, setCurrentGateway] = useState(
     userPreferredGateway || appConfig.defaultGateway
   );
@@ -128,10 +134,6 @@ export const HeaderDropdown = ({ walletAddress }: HeaderDropdownProps) => {
           <DropdownMenuContent
             css={{
               minWidth: 200,
-
-              '[role="menuitem"]': {
-                py: "$3",
-              },
             }}
             sideOffset={8}
             collisionPadding={8}
@@ -153,14 +155,48 @@ export const HeaderDropdown = ({ walletAddress }: HeaderDropdownProps) => {
                 <DropdownMenuSubContent
                   css={{
                     minWidth: 200,
-
-                    '[role="menuitem"]': {
-                      py: "$3",
-                    },
                   }}
                   sideOffset={8}
                 >
-                  {/* <DropdownMenuItem>Check Balance</DropdownMenuItem> */}
+                  <DropdownMenuLabel>choose Irys node</DropdownMenuLabel>
+                  <DropdownMenuRadioGroup
+                    value={irysInitOpts?.node}
+                    onValueChange={(v: any) =>
+                      setIrys({ init: { node: v as "node1" | "node2" } })
+                    }
+                  >
+                    <DropdownMenuRadioItem
+                      css={{
+                        height: 30,
+                        color:
+                          irysInitOpts?.node === "node1"
+                            ? "$slate12"
+                            : "$slate11",
+                      }}
+                      value="node1"
+                    >
+                      <DropdownMenuItemIndicator>
+                        <RxDotFilled />
+                      </DropdownMenuItemIndicator>
+                      node1
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem
+                      css={{
+                        height: 30,
+                        color:
+                          irysInitOpts?.node === "node2"
+                            ? "$slate12"
+                            : "$slate11",
+                      }}
+                      value="node2"
+                    >
+                      <DropdownMenuItemIndicator>
+                        <RxDotFilled />
+                      </DropdownMenuItemIndicator>
+                      node2
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     ref={dropdownItemRef}
                     onSelect={() => setOpeningDialog(true)}
