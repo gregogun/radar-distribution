@@ -17,6 +17,7 @@
     "clean-build": "rm -rf out*"
   },
   "dependencies": {
+    "@ardrive/turbo-sdk": "1.1.0",
     "@hookform/resolvers": "3.3.2",
     "@irys/sdk": "0.0.4",
     "@next/font": "13.1.6",
@@ -38,9 +39,11 @@
     "arweave-graphql": "0.0.5",
     "arweave-wallet-connector": "1.0.2",
     "bignumber.js": "9.1.2",
+    "crypto-browserify": "3.12.0",
     "filereader-stream": "2.0.0",
     "next": "13.1.6",
     "next-themes": "0.2.1",
+    "process": "0.11.10",
     "react": "18.2.0",
     "react-beautiful-dnd": "13.1.1",
     "react-dom": "18.2.0",
@@ -49,6 +52,7 @@
     "react-icons": "4.7.1",
     "react-router-dom": "6.11.2",
     "sonner": "1.1.0",
+    "stream-browserify": "3.0.0",
     "warp-contracts": "1.4.25",
     "warp-contracts-plugin-deploy": "1.0.12",
     "zod": "3.22.4"

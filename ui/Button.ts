@@ -76,10 +76,10 @@ export const Button = styled("button", {
      */
     size: {
       1: {
-        height: "$8",
+        height: "$7",
         fontSize: "$1",
         lineHeight: "$sizes$8",
-        px: "$4",
+        px: "$3",
         gap: "$1",
 
         "& svg": {

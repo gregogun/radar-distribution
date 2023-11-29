@@ -35,11 +35,19 @@ import { FundNodeDialog } from "../wallet/FundNodeDialog";
 import { useQuery } from "@tanstack/react-query";
 import { getAccount } from "@/lib/account/api";
 import { useIrys } from "@/hooks/useIrys";
+import { CheckBalanceDialog } from "../wallet/CheckBalance";
 
 const StyledLink = styled(Link);
 
 interface HeaderDropdownProps {
   walletAddress: string;
+}
+
+type DialogName = "fundNode" | "checkBalance";
+
+interface DialogOpenProps {
+  name?: DialogName;
+  open: boolean;
 }
 
 export const HeaderDropdown = ({ walletAddress }: HeaderDropdownProps) => {
@@ -49,10 +57,10 @@ export const HeaderDropdown = ({ walletAddress }: HeaderDropdownProps) => {
     userPreferredGateway || appConfig.defaultGateway
   );
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [openingDialog, setOpeningDialog] = useState(false);
-  const [closingDialog, setClosingDialog] = useState(false);
-  const dropdownItemRef = useRef<HTMLDivElement | null>(null);
+  const [dialogOpen, setDialogOpen] = useState<DialogOpenProps>({
+    open: false,
+  });
+  const dropdownTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   const { data: profile, isError } = useQuery({
     queryKey: [`profile-${walletAddress}`],
@@ -65,32 +73,37 @@ export const HeaderDropdown = ({ walletAddress }: HeaderDropdownProps) => {
     },
   });
 
-  useEffect(() => {
-    if (openingDialog) {
-      if (!dropdownOpen) {
-        setDialogOpen(true);
-        setOpeningDialog(false);
-      }
-    }
-    if (closingDialog) {
-      if (dialogOpen) {
-        setDialogOpen(false);
-      }
-      if (!dialogOpen) {
-        setDropdownOpen(true);
-      }
-      if (dropdownOpen) {
-        dropdownItemRef.current?.focus();
-        setClosingDialog(false);
-      }
-    }
-  }, [dropdownOpen, dialogOpen, openingDialog, closingDialog]);
-
-  const handleGatewaySwitch = (gateway: string) => {
-    const url = `https://${gateway}`;
-    localStorage.setItem("gateway", url);
-    setCurrentGateway(url);
+  const openDialog = (name: DialogName) => setDialogOpen({ name, open: true });
+  const closeDialog = (name: DialogName) => {
+    setDialogOpen({ name, open: false });
   };
+
+  useEffect(() => {
+    if (dialogOpen.open) {
+      setDropdownOpen(false);
+    }
+  }, [dialogOpen.open]);
+
+  // useEffect(() => {
+  //   if (openingDialog) {
+  //     if (!dropdownOpen) {
+  //       setDialogOpen(true);
+  //       setOpeningDialog(false);
+  //     }
+  //   }
+  //   if (closingDialog) {
+  //     if (dialogOpen) {
+  //       setDialogOpen(false);
+  //     }
+  //     if (!dialogOpen) {
+  //       setDropdownOpen(true);
+  //     }
+  //     if (dropdownOpen) {
+  //       dropdownItemRef.current?.focus();
+  //       setClosingDialog(false);
+  //     }
+  //   }
+  // }, [dropdownOpen, dialogOpen, openingDialog, closingDialog]);
 
   const name =
     profile && profile.handle
@@ -103,7 +116,7 @@ export const HeaderDropdown = ({ walletAddress }: HeaderDropdownProps) => {
         open={dropdownOpen}
         onOpenChange={setDropdownOpen}
       >
-        <DropdownMenuTrigger asChild>
+        <DropdownMenuTrigger ref={dropdownTriggerRef} asChild>
           <Button
             css={{
               fontWeight: 400,
@@ -158,6 +171,13 @@ export const HeaderDropdown = ({ walletAddress }: HeaderDropdownProps) => {
                   }}
                   sideOffset={8}
                 >
+                  <DropdownMenuItem onSelect={() => openDialog("checkBalance")}>
+                    Check Balance
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => openDialog("fundNode")}>
+                    Fund Irys node
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuLabel>choose Irys node</DropdownMenuLabel>
                   <DropdownMenuRadioGroup
                     value={irysInitOpts?.node}
@@ -196,13 +216,6 @@ export const HeaderDropdown = ({ walletAddress }: HeaderDropdownProps) => {
                       node2
                     </DropdownMenuRadioItem>
                   </DropdownMenuRadioGroup>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    ref={dropdownItemRef}
-                    onSelect={() => setOpeningDialog(true)}
-                  >
-                    Fund Irys Node
-                  </DropdownMenuItem>
                 </DropdownMenuSubContent>
               </DropdownMenuPortal>
             </DropdownMenuSubRoot>
@@ -224,9 +237,17 @@ export const HeaderDropdown = ({ walletAddress }: HeaderDropdownProps) => {
       </DropdownMenuRoot>
 
       <FundNodeDialog
-        modal={dialogOpen}
-        open={dialogOpen}
-        onClose={() => setClosingDialog(true)}
+        modal={dialogOpen.name === "fundNode" && dialogOpen.open}
+        open={dialogOpen.name === "fundNode" && dialogOpen.open}
+        onClose={() => closeDialog("fundNode")}
+        dropdownTriggerRef={dropdownTriggerRef}
+      />
+
+      <CheckBalanceDialog
+        modal={dialogOpen.name === "checkBalance" && dialogOpen.open}
+        open={dialogOpen.name === "checkBalance" && dialogOpen.open}
+        onClose={() => closeDialog("checkBalance")}
+        dropdownTriggerRef={dropdownTriggerRef}
       />
     </>
   );
