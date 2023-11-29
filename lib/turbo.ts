@@ -1,22 +1,3 @@
-import {
-  TurboFactory,
-  developmentTurboConfiguration,
-} from "@ardrive/turbo-sdk";
-import { arweave } from "./arweave";
-
-// export const getTurboBalance = async () => {
-//   const jwk = await arweave.wallets.generate();
-//   const turbo = TurboFactory.authenticated({
-//     privateKey: jwk,
-//     ...developmentTurboConfiguration,
-//   });
-
-//   const balance = await turbo.getBalance();
-//   console.log(balance);
-
-//   return balance;
-// };
-
 export const getTurboBalance = async () => {
   if (typeof window === "undefined") {
     return;
