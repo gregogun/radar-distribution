@@ -1,3 +1,5 @@
+// import { TurboAuthenticatedClient, TurboFactory } from "@ardrive/turbo-sdk/web";
+
 export const getTurboBalance = async () => {
   if (typeof window === "undefined") {
     return;
@@ -52,3 +54,72 @@ async function bufferToBase64(
   //@ts-ignore
   return base64url.slice(base64url.indexOf(",") + 1);
 }
+
+// export const getTurbo = async () => {
+//   const turbo = TurboFactory.unauthenticated();
+
+//   return turbo;
+// };
+
+// export const getSupportedCurrencies = async () => {
+//   const turbo = await getTurbo();
+//   const currencies = await turbo.getSupportedCurrencies();
+//   const fiatToAr = await turbo.getFiatToAR({ currency: "gbp" });
+
+//   console.log({ currencies });
+//   console.log({ fiatToAr });
+// };
+
+export const getSupportedCurrencies = async (): Promise<Currency> => {
+  const res = await fetch("https://payment.ardrive.io/v1/currencies");
+
+  const data = await res.json();
+  return data.supportedCurrencies;
+};
+
+type Currency =
+  | "aud"
+  | "brl"
+  | "cad"
+  | "eur"
+  | "gbp"
+  | "hkd"
+  | "inr"
+  | "jpy"
+  | "sgd"
+  | "usd";
+
+interface CreateCheckoutSession {
+  address: string | undefined;
+  currency: Currency;
+  amount: number | undefined;
+}
+
+interface CheckoutResponse {
+  paymentSession: {
+    url: string;
+  };
+}
+
+export const createCheckoutSession = async ({
+  address,
+  currency,
+  amount,
+}: CreateCheckoutSession) => {
+  if (!address) {
+    throw new Error("No address connected");
+  }
+
+  if (!amount) {
+    throw new Error("No amount provided");
+  }
+
+  const res = await fetch(
+    `https://payment.ardrive.io/v1/top-up/checkout-session/${address}/${currency}/${
+      amount * 100
+    }`
+  );
+
+  const data: CheckoutResponse = await res.json();
+  return data;
+};

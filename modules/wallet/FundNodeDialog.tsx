@@ -81,7 +81,6 @@ export const FundNodeDialog = ({
     mutationFn: fundIrysNode,
     mutationKey: [`fundNode-${irysNode}`],
     onSuccess: (data) => {
-      console.log("funded!");
       toast.success(
         `Successfully funded ${data.quantity} ${data.token} to ${irysNode}`
       );
@@ -93,7 +92,6 @@ export const FundNodeDialog = ({
   });
 
   const onSubmit = async (data: FundNodeSchema) => {
-    console.log("funding...");
     fundMutation.mutate({
       node: data.irysNode,
       amount: data.fundAmount,

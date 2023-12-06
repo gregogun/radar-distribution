@@ -17,8 +17,10 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      // Emotion typedefs point to an empty file, which unsets all declarations
-      "arconnect": ["./types/arconnect.d.ts"]
+      "arconnect": ["./types/arconnect.d.ts"],
+      "@ardrive/turbo-sdk/web": [
+        "./node_modules/@ardrive/turbo-sdk/lib/types/web"
+      ]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],

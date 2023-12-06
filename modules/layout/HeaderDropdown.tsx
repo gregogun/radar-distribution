@@ -35,7 +35,6 @@ import { FundNodeDialog } from "../wallet/FundNodeDialog";
 import { useQuery } from "@tanstack/react-query";
 import { getAccount } from "@/lib/account/api";
 import { useIrys } from "@/hooks/useIrys";
-import { CheckBalanceDialog } from "../wallet/CheckBalance";
 
 const StyledLink = styled(Link);
 
@@ -83,27 +82,6 @@ export const HeaderDropdown = ({ walletAddress }: HeaderDropdownProps) => {
       setDropdownOpen(false);
     }
   }, [dialogOpen.open]);
-
-  // useEffect(() => {
-  //   if (openingDialog) {
-  //     if (!dropdownOpen) {
-  //       setDialogOpen(true);
-  //       setOpeningDialog(false);
-  //     }
-  //   }
-  //   if (closingDialog) {
-  //     if (dialogOpen) {
-  //       setDialogOpen(false);
-  //     }
-  //     if (!dialogOpen) {
-  //       setDropdownOpen(true);
-  //     }
-  //     if (dropdownOpen) {
-  //       dropdownItemRef.current?.focus();
-  //       setClosingDialog(false);
-  //     }
-  //   }
-  // }, [dropdownOpen, dialogOpen, openingDialog, closingDialog]);
 
   const name =
     profile && profile.handle
@@ -171,9 +149,6 @@ export const HeaderDropdown = ({ walletAddress }: HeaderDropdownProps) => {
                   }}
                   sideOffset={8}
                 >
-                  <DropdownMenuItem onSelect={() => openDialog("checkBalance")}>
-                    Check Balance
-                  </DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => openDialog("fundNode")}>
                     Fund Irys node
                   </DropdownMenuItem>
@@ -240,13 +215,6 @@ export const HeaderDropdown = ({ walletAddress }: HeaderDropdownProps) => {
         modal={dialogOpen.name === "fundNode" && dialogOpen.open}
         open={dialogOpen.name === "fundNode" && dialogOpen.open}
         onClose={() => closeDialog("fundNode")}
-        dropdownTriggerRef={dropdownTriggerRef}
-      />
-
-      <CheckBalanceDialog
-        modal={dialogOpen.name === "checkBalance" && dialogOpen.open}
-        open={dialogOpen.name === "checkBalance" && dialogOpen.open}
-        onClose={() => closeDialog("checkBalance")}
         dropdownTriggerRef={dropdownTriggerRef}
       />
     </>

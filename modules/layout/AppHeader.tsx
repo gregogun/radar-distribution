@@ -13,6 +13,7 @@ import { BsSun } from "react-icons/bs";
 import { useQuery } from "@tanstack/react-query";
 import { getAccount } from "@/lib/account/api";
 import { appConfig } from "@/appConfig";
+import { Balances } from "./Balances";
 
 const NavLink = styled(Link, {
   display: "flex",
@@ -59,35 +60,16 @@ export const AppHeader = () => {
     <Flex
       as="header"
       css={{
-        // display: "grid",
-        // gridTemplateColumns: "1fr 1fr 1fr",
+        width: "100%",
         display: "flex",
-        justifyContent: "space-between",
         py: "$3",
         px: "$10",
-        mb: location.pathname === "/profile" ? 0 : "$10",
       }}
-      justify="between"
+      justify="end"
       align="center"
     >
-      <Flex gap="10" align="center">
-        <Link
-          to={{
-            pathname: "/",
-          }}
-        >
-          {/* <Image
-            src={src}
-            css={{
-              width: 94,
-              height: 17,
-            }}
-          /> */}
-          Radar
-        </Link>
-      </Flex>
-
       <Flex align="center" justify="end" gap="2">
+        {walletAddress && <Balances />}
         <IconButton
           css={{
             backgroundColor: "transparent",

@@ -81,10 +81,10 @@ export const AccordionTrigger = forwardRef<
 >(({ children, ...props }, forwardedRef) => (
   <StyledHeader>
     <StyledTrigger {...props} ref={forwardedRef}>
+      {children}
       <StyledIcon>
         <RxTriangleRight aria-hidden />
       </StyledIcon>
-      {children}
     </StyledTrigger>
   </StyledHeader>
 ));

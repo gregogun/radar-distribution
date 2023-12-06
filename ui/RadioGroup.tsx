@@ -5,6 +5,11 @@ export const RadioGroup = styled(RadioGroupPrimitive.Root, {
   display: "flex",
   flexDirection: "column",
 
+  "&:disabled": {
+    opacity: 0.5,
+    pointerEvents: "none",
+  },
+
   variants: {
     gap: {
       1: {
