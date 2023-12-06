@@ -21,6 +21,7 @@ specifiers:
   '@types/node': 18.11.18
   '@types/react': 18.0.27
   '@types/react-dom': 18.0.10
+  arbundles: 0.10.0
   arconnect: 1.0.3
   arweave: 1.13.7
   arweave-account: 1.4.3
@@ -67,6 +68,7 @@ dependencies:
   '@radix-ui/react-tabs': 1.0.4_fxtgt6bjwd6p4cwoordejim2zi
   '@stitches/react': 1.2.8_react@18.2.0
   '@tanstack/react-query': 4.28.0_biqbaboplfbrettd7655fr4n2y
+  arbundles: 0.10.0_arweave@1.13.7
   arconnect: 1.0.3
   arweave: 1.13.7
   arweave-account: 1.4.3

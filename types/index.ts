@@ -2,6 +2,8 @@ import { PermissionType } from "arconnect";
 import { AppInfo } from "arweave-wallet-connector";
 import { ReactiveConnector } from "arweave-wallet-connector/lib/browser/Reactive";
 
+export type UploadProvider = "irys" | "turbo";
+
 export type TransactionTag = {
   name: string;
   value: string;

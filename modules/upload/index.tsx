@@ -346,12 +346,9 @@ export const Upload = () => {
   const onSubmit = async (data: UploadSchema) => {
     console.log(data);
     try {
-      await upload(data, walletAddress, form, irysOpts);
+      await upload(data, walletAddress, form, irysOpts, "turbo");
       toast.success("Tracks successfully uploaded!");
     } catch (error) {
-      if (form.formState.isSubmitting) {
-        form.formState.isSubmitting = false;
-      }
       console.error(error);
       toast.error("Upload error. Please try again.");
     }
@@ -1081,8 +1078,8 @@ export const Upload = () => {
                   {walletAddress ? (
                     <Button
                       disabled={
-                        form.formState.isSubmitting ||
-                        form.formState.isSubmitSuccessful
+                        form.formState.isSubmitting
+                        // || form.formState.isSubmitSuccessful
                       }
                       type="submit"
                       variant="solid"

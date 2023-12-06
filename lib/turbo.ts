@@ -1,4 +1,7 @@
 // import { TurboAuthenticatedClient, TurboFactory } from "@ardrive/turbo-sdk/web";
+import { DataItem } from "arbundles";
+
+import { TransactionTags } from "@/types";
 
 export const getTurboBalance = async () => {
   if (typeof window === "undefined") {
@@ -122,4 +125,30 @@ export const createCheckoutSession = async ({
 
   const data: CheckoutResponse = await res.json();
   return data;
+};
+
+interface TurboUploadResponse {
+  id: string;
+  owner: string;
+  timestamp: number;
+}
+
+export const uploadFileTurbo = async (data: Buffer): Promise<string> => {
+  const response = await fetch("https://upload.ardrive.io/v1/tx", {
+    method: "POST",
+    headers: {
+      "content-type": "application/octet-stream",
+      accept: "application/json",
+    },
+    body: data,
+  });
+
+  if (!response.ok) {
+    throw new Error(`${response.status} ${response.statusText}`);
+  }
+
+  const uploadInfo: TurboUploadResponse = await response.json();
+  console.log({ uploadInfo });
+
+  return uploadInfo.id;
 };
