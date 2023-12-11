@@ -12,8 +12,7 @@ export const upload = async (
   data: UploadSchema,
   address: string | undefined,
   form: UseFormReturn<UploadSchema>,
-  irysOpts: IrysOpts,
-  uploadProvider: UploadProvider
+  irysOpts: IrysOpts
 ) => {
   try {
     if (!address) {
@@ -22,11 +21,21 @@ export const upload = async (
 
     const isCollection = data.tracklist.length > 1;
 
+    let collectionCode = "";
+
+    if (isCollection) {
+      if (data.collectionCode) {
+        collectionCode = data.collectionCode;
+      } else {
+        collectionCode = crypto.randomUUID();
+      }
+    }
+
     let artworkTx: string;
 
     /* upload release artwork */
     /* update to prefer tx once we add option in form */
-    artworkTx = await uploadArtwork(data.releaseArtwork, uploadProvider);
+    artworkTx = await uploadArtwork(data.releaseArtwork, data.uploadProvider);
 
     /* upload tracks individually */
     const trackTxs = await uploadTracks(
@@ -35,11 +44,14 @@ export const upload = async (
       artworkTx,
       form,
       irysOpts,
-      uploadProvider
+      data.uploadProvider,
+      collectionCode
     );
 
     const registerNode =
-      uploadProvider === "turbo" ? "arweave" : irysOpts?.init?.node || "node2";
+      data.uploadProvider === "turbo"
+        ? "arweave"
+        : irysOpts?.init?.node || "node2";
 
     //register track txs
     await Promise.all(
@@ -62,6 +74,9 @@ export const upload = async (
     if (isCollection) {
       /* if more than one track, upload collection */
       collectionTx = await uploadCollection(data, trackTxs, address);
+      await warp.register(collectionTx, registerNode).then((res) => {
+        console.log(`collection successfully registered: ${res.contractTxId}`);
+      });
     }
   } catch (error) {
     throw error;
@@ -74,7 +89,8 @@ const uploadTracks = async (
   artworkId: string,
   form: UseFormReturn<UploadSchema>,
   irysOpts: IrysOpts,
-  uploadProvider: UploadProvider
+  uploadProvider: UploadProvider,
+  collectionCode?: string
 ): Promise<string[]> => {
   // empty array to fill with successfully uploaded tracks
   let uploadedTracks: string[] = [];
@@ -121,6 +137,21 @@ const uploadTracks = async (
       //test tags
       tags = tags.concat({ name: "Env", value: "Test" });
 
+      // additional
+      if (data.releaseDate) {
+        tags = tags.concat({
+          name: "Release-Date",
+          value: (new Date(data.releaseDate).getTime() / 1000).toFixed(0),
+        });
+      }
+
+      if (collectionCode) {
+        tags = tags.concat({
+          name: "Collection-Code",
+          value: collectionCode,
+        });
+      }
+
       //ans-110 tags
       tags = tags.concat({ name: "Content-Type", value: track.file.type });
       tags = tags.concat({ name: "Title", value: track.metadata.title });
@@ -148,7 +179,7 @@ const uploadTracks = async (
         ticker: "ATOMIC-SONG",
         name: track.metadata.title,
         balances: {
-          [address]: 100,
+          [address]: data.tokenQuantity,
         },
         claimable: [],
       });
@@ -344,43 +375,63 @@ const uploadCollection = async (
   data: UploadSchema,
   trackTxs: string[],
   address: string
-): Promise<string | undefined> => {
-  let collectionId: string = "";
-
-  const tags: TransactionTags = [
-    {
-      name: "Data-Protocol",
-      value: "Collection",
-    },
-    {
-      name: "Collection-Type",
-      value: "audio",
-    },
-    {
-      name: "Title",
-      value: data.title,
-    },
-    {
-      name: "Description",
-      value: data.description,
-    },
-  ];
-
-  const collectionData = JSON.stringify({
-    type: "Collection",
-    items: trackTxs,
-  });
-
+): Promise<string> => {
   try {
-    const collectionTx = await uploadData(collectionData, tags);
-    console.log(collectionTx);
+    let collectionId: string = "";
 
-    collectionId = collectionTx.id;
+    const tags: TransactionTags = [
+      {
+        name: "Data-Protocol",
+        value: "Collection",
+      },
+      {
+        name: "Collection-Type",
+        value: "audio",
+      },
+      {
+        name: "Title",
+        value: data.title,
+      },
+      {
+        name: "Description",
+        value: data.description,
+      },
+    ];
+
+    // additional
+    if (data.releaseDate) {
+      tags.push({
+        name: "Release-Date",
+        value: (new Date(data.releaseDate).getTime() / 1000).toFixed(0),
+      });
+    }
+
+    const collectionData = JSON.stringify({
+      type: "Collection",
+      items: trackTxs,
+    });
+
+    if (data.uploadProvider === "irys") {
+      const collectionTx = await uploadData(collectionData, tags);
+      console.log(collectionTx);
+
+      collectionId = collectionTx.id;
+    } else {
+      const signed = await window.arweaveWallet.signDataItem({
+        data: collectionData,
+        tags,
+      });
+
+      // load the result into a DataItem instance
+      //@ts-ignore
+      const dataItem = new DataItem(signed);
+      collectionId = await uploadFileTurbo(dataItem.getRaw());
+    }
+
+    return collectionId;
   } catch (error) {
     throw error;
   }
-
-  return collectionId;
 };
 
 const uploadArtwork = async (

@@ -1,8 +1,3 @@
-// import { TurboAuthenticatedClient, TurboFactory } from "@ardrive/turbo-sdk/web";
-import { DataItem } from "arbundles";
-
-import { TransactionTags } from "@/types";
-
 export const getTurboBalance = async () => {
   if (typeof window === "undefined") {
     return;
@@ -22,7 +17,7 @@ export const getTurboBalance = async () => {
       },
     });
 
-    const data = await res.json();
+    const data: { winc: string } = await res.json();
     console.log({ data });
     return data;
   } catch (error) {
@@ -134,7 +129,7 @@ interface TurboUploadResponse {
 }
 
 export const uploadFileTurbo = async (data: Buffer): Promise<string> => {
-  const response = await fetch("https://upload.ardrive.io/v1/tx", {
+  const res = await fetch("https://upload.ardrive.io/v1/tx", {
     method: "POST",
     headers: {
       "content-type": "application/octet-stream",
@@ -143,12 +138,27 @@ export const uploadFileTurbo = async (data: Buffer): Promise<string> => {
     body: data,
   });
 
-  if (!response.ok) {
-    throw new Error(`${response.status} ${response.statusText}`);
+  if (!res.ok) {
+    throw new Error(`${res.status} ${res.statusText}`);
   }
 
-  const uploadInfo: TurboUploadResponse = await response.json();
+  const uploadInfo: TurboUploadResponse = await res.json();
   console.log({ uploadInfo });
 
   return uploadInfo.id;
+};
+
+export const getTurboUploadCost = async (byteCount: number) => {
+  const res = await fetch(
+    `https://payment.ardrive.io/v1/price/bytes/${byteCount}`
+  );
+
+  if (!res.ok) {
+    throw new Error(`${res.status} ${res.statusText}`);
+  }
+
+  const cost: { winc: string } = await res.json();
+  console.log({ cost });
+
+  return cost;
 };

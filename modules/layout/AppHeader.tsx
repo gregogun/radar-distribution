@@ -13,7 +13,7 @@ import { BsSun } from "react-icons/bs";
 import { useQuery } from "@tanstack/react-query";
 import { getAccount } from "@/lib/account/api";
 import { appConfig } from "@/appConfig";
-import { Balances } from "./Balances";
+import { CheckBalances } from "../wallet/CheckBalances";
 
 const NavLink = styled(Link, {
   display: "flex",
@@ -69,7 +69,7 @@ export const AppHeader = () => {
       align="center"
     >
       <Flex align="center" justify="end" gap="2">
-        {walletAddress && <Balances />}
+        {walletAddress && <CheckBalances />}
         <IconButton
           css={{
             backgroundColor: "transparent",

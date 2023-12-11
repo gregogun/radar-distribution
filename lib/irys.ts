@@ -84,3 +84,14 @@ export const fundIrysNode = async ({
     token: irys.token,
   };
 };
+
+export const getIrysUploadCost = async (byteCount: number) => {
+  const irys = await getIrys();
+
+  const priceAtomic = await irys.getPrice(byteCount);
+
+  // Convert from atomic units to standard units
+  const priceConverted = irys.utils.fromAtomic(priceAtomic);
+
+  return priceConverted;
+};

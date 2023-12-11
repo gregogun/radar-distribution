@@ -6,8 +6,7 @@ import {
   PopoverTrigger,
 } from "@/ui/Popover";
 import { RxChevronDown, RxCross2, RxReload } from "react-icons/rx";
-import { ArweaveLogo } from "../wallet/components/ArweaveLogo";
-import { BigNumber } from "bignumber.js";
+import { ArweaveLogo } from "./components/ArweaveLogo";
 import { useConnect } from "@/hooks/useConnect";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { getArBalance } from "@/lib/arweave";
@@ -19,11 +18,14 @@ import { Typography } from "@/ui/Typography";
 import { Box } from "@/ui/Box";
 import { LoadingSpinner } from "@/ui/Loader";
 import { IconButton } from "@/ui/IconButton";
-import { TurboDialog } from "../wallet/TurboDialog";
+import { TurboDialog } from "./TurboDialog";
+import { useTurbo } from "@/hooks/useTurbo";
+import { formatCredits } from "@/utils";
 
-export const Balances = () => {
+export const CheckBalances = () => {
   const { walletAddress } = useConnect();
   const [showTurboDialog, setShowTurboDialog] = useState(false);
+  const { balance, setState } = useTurbo();
 
   const handleShowTurboDialog = () => setShowTurboDialog(true);
   const handleCancelTurboDialog = () => setShowTurboDialog(false);
@@ -47,19 +49,14 @@ export const Balances = () => {
   const turboBalance = useMutation({
     mutationFn: getTurboBalance,
     mutationKey: ["turboBalance"],
+    onSuccess: (data) => {
+      setState({ balance: data?.winc });
+    },
     onError: (error) => {
       console.error(error);
       // toast.error("Error getting balance");
     },
   });
-
-  const formatCredits = (winc: string) => {
-    const credits = new BigNumber(winc);
-
-    const formattedCredits = credits.dividedBy(1e12).toFixed(4);
-
-    return formattedCredits;
-  };
 
   const handleRetry = async () => {
     if (
@@ -144,7 +141,7 @@ export const Balances = () => {
             {turboBalance.isSuccess && (
               <>
                 <Typography contrast="hi">
-                  {formatCredits(turboBalance.data.winc)}
+                  {formatCredits(turboBalance.data?.winc)}
                   <Box css={{ color: "$slate11" }} as="span">
                     {" "}
                     Credits
@@ -256,7 +253,7 @@ export const Balances = () => {
         </PopoverClose>
 
         <TurboDialog
-          open={showTurboDialog}
+          open={showTurboDialog && !!walletAddress}
           onClose={handleCancelTurboDialog}
           balance={turboBalance.data}
           noCredits={userNotFound}

@@ -59,9 +59,11 @@ const StyledRadioItem = styled(RadioItem, {
 });
 
 interface TurboDialogProps {
-  balance: {
-    winc: string | undefined;
-  };
+  balance:
+    | {
+        winc: string;
+      }
+    | undefined;
   noCredits: boolean;
   open: boolean;
   onClose: () => void;

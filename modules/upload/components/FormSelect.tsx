@@ -18,9 +18,15 @@ interface FormSelectProps {
   name: string;
   values: typeof genres | UDLValues[keyof UDLValues] | any[];
   disabled?: boolean;
+  capitalizeItems?: boolean;
 }
 
-export const FormSelect = ({ values, name, disabled }: FormSelectProps) => {
+export const FormSelect = ({
+  values,
+  name,
+  disabled,
+  capitalizeItems,
+}: FormSelectProps) => {
   const { control, getValues } = useFormContext();
 
   return (
@@ -41,14 +47,8 @@ export const FormSelect = ({ values, name, disabled }: FormSelectProps) => {
             <SelectContent sideOffset={8}>
               <SelectViewport>
                 {values.map((value) => (
-                  <SelectItem
-                    css={{
-                      textTransform: "capitalize",
-                    }}
-                    key={value}
-                    value={value}
-                  >
-                    {formatSchemaValue(value)}
+                  <SelectItem key={value} value={value}>
+                    {values === genres ? value : formatSchemaValue(value)}
                   </SelectItem>
                 ))}
               </SelectViewport>

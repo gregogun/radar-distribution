@@ -15,7 +15,7 @@ import { Track, UploadSchema, uploadSchema } from "./schema";
 import { TextField } from "@/ui/TextField";
 import { Textarea } from "@/ui/Textarea";
 import { genres } from "@/data/genres";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { IconButton } from "@/ui/IconButton";
 import { Container } from "@/ui/Container";
@@ -38,6 +38,10 @@ import { getTotalDuration } from "@/lib/audioDuration";
 import { getAccount } from "@/lib/account/api";
 import { appConfig } from "@/appConfig";
 import { useIrys } from "@/hooks/useIrys";
+import { UploadDialog } from "./UploadDialog";
+import { AppHeader } from "../layout/AppHeader";
+import { useLocation } from "react-router-dom";
+import { FormHelperAccordion } from "./components/FormHelperAccordion";
 
 const AudioDropContainer = styled("div", {
   display: "flex",
@@ -95,6 +99,7 @@ export const Upload = () => {
     open: false,
     index: 0,
   });
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [currentTab, setCurrentTab] = useState<CurrentTab>("details");
   const [currentlyPlayingIndex, setCurrentlyPlayingIndex] = useState<
     null | number
@@ -102,6 +107,13 @@ export const Upload = () => {
   const { walletAddress, connect, connecting } = useConnect();
   const irysOpts = useIrys();
   const audioRef = useRef<(HTMLAudioElement | null)[]>([]);
+  const location = useLocation();
+
+  // useEffect(() => {
+  //   if (location.pathname === "upload") {
+  //     alertUser();
+  //   }
+  // }, [location]);
 
   const form = useForm<UploadSchema>({
     resolver: zodResolver(uploadSchema),
@@ -122,6 +134,7 @@ export const Upload = () => {
         file: undefined,
         url: undefined,
       },
+      uploadProvider: "irys",
     },
   });
 
@@ -162,7 +175,7 @@ export const Upload = () => {
   const detailsValid = () => {
     const artworkValid = Object.values(reactiveArtwork).every((item) => item);
 
-    if (!!reactiveTitle && !!reactiveDescription && artworkValid) {
+    if (!!reactiveTitle && artworkValid) {
       return true;
     } else {
       return false;
@@ -192,7 +205,7 @@ export const Upload = () => {
       ? Object.values(artwork).every((item) => item)
       : false;
 
-    if (!!title && !!description && artworkValid) {
+    if (!!title && artworkValid) {
       return true;
     } else {
       return false;
@@ -337,6 +350,9 @@ export const Upload = () => {
   const handleCancelDetailsDialog = (index: number) =>
     setShowDetailsDialog({ open: false, index });
 
+  const handleShowUploadDialog = () => setShowUploadDialog(true);
+  const handleCancelUploadDialog = () => setShowUploadDialog(false);
+
   const isAlbum =
     !!form.getValues("tracklist") && form.getValues("tracklist").length > 1;
 
@@ -346,7 +362,7 @@ export const Upload = () => {
   const onSubmit = async (data: UploadSchema) => {
     console.log(data);
     try {
-      await upload(data, walletAddress, form, irysOpts, "turbo");
+      await upload(data, walletAddress, form, irysOpts);
       toast.success("Tracks successfully uploaded!");
     } catch (error) {
       console.error(error);
@@ -393,8 +409,23 @@ export const Upload = () => {
     },
   });
 
+  useEffect(() => {
+    window.addEventListener("beforeunload", alertUser);
+    return () => {
+      window.removeEventListener("beforeunload", alertUser);
+    };
+  }, []);
+
+  const alertUser = (e: BeforeUnloadEvent) => {
+    if (Object.keys(form.formState.touchedFields).length > 0) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
+  };
+
   return (
     <Fullscreen>
+      <AppHeader />
       <FormProvider {...form}>
         <Box as="form" onSubmit={handleSubmit(onSubmit)}>
           <Flex direction="column">
@@ -430,7 +461,7 @@ export const Upload = () => {
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value="details">
-                  <Flex gap="20">
+                  <Flex css={{ mt: "$5" }} gap="20">
                     <Flex css={{ flex: 1 }} direction="column">
                       <FormRow>
                         <Label htmlFor="title">Title</Label>
@@ -447,7 +478,11 @@ export const Upload = () => {
                           </FormHelperError>
                         )}
                       </FormRow>
-                      <FormRow>
+                      <FormRow
+                        css={{
+                          mb: "$5",
+                        }}
+                      >
                         <Label htmlFor="description">Description</Label>
                         <Textarea
                           size="3"
@@ -456,11 +491,13 @@ export const Upload = () => {
                           {...register("description")}
                         />
                         {errors.description &&
-                          reactiveDescription.length < 1 && (
-                            <FormHelperError>
-                              {errors.description.message}
-                            </FormHelperError>
-                          )}
+                        reactiveDescription.length > 300 ? (
+                          <FormHelperError>
+                            {errors.description.message}
+                          </FormHelperError>
+                        ) : (
+                          <FormHelperText>Max. 300 characters</FormHelperText>
+                        )}
                       </FormRow>
                       <FormRow>
                         <Label htmlFor="genre">Genre</Label>
@@ -475,6 +512,14 @@ export const Upload = () => {
                           {...register("topics")}
                           size="3"
                         />
+                        <FormHelperAccordion
+                          value="why-tags"
+                          triggerLabel="Why add additional tags?"
+                        >
+                          Adding additional tags that describe the mood of your
+                          track can help to boost your discovery across
+                          platforms.
+                        </FormHelperAccordion>
                       </FormRow>
                       <FormRow>
                         <Label htmlFor="releaseDate">
@@ -486,11 +531,33 @@ export const Upload = () => {
                           placeholder="Release Date"
                           {...register("releaseDate")}
                         />
-                        {errors.releaseDate && (
+                        {errors.releaseDate ? (
                           <FormHelperError>
                             {errors.releaseDate.message}
                           </FormHelperError>
+                        ) : (
+                          <FormHelperText
+                            css={{
+                              position: "relative",
+                            }}
+                          >
+                            Refers to date of initial release and will not
+                            effect your track/album showing up as a new release
+                          </FormHelperText>
                         )}
+                      </FormRow>
+                      <FormRow>
+                        <Label htmlFor="collectionCode">Album Code</Label>
+                        <TextField
+                          id="collectionCode"
+                          type="text"
+                          placeholder="A unique identifier for your album"
+                          {...register("collectionCode")}
+                          size="3"
+                        />
+                        <FormHelperText>
+                          If left blank, we'll generate one for you
+                        </FormHelperText>
                       </FormRow>
                     </Flex>
                     <FormRow
@@ -532,14 +599,17 @@ export const Upload = () => {
                               size="1"
                               css={{
                                 br: "$round",
-                                backgroundColor: "$slate12",
+                                backgroundColor: "$whiteA12",
+                                boxShadow:
+                                  "0 0 0 1px $colors$neutralInvertedA6",
+                                backdropFilter: "blur(4px)",
                                 color: "$blackA12",
                                 position: "absolute",
                                 top: "-$2",
                                 right: "-$2",
 
                                 "&:hover": {
-                                  backgroundColor: "$slateSolidHover",
+                                  backgroundColor: "$whiteA11",
                                 },
 
                                 "& svg": {
@@ -555,7 +625,9 @@ export const Upload = () => {
                         )}
                       </ImageDropzone>
                       <Flex direction="column" gap="3">
-                        <FormHelperText css={{ position: "relative" }}>
+                        <FormHelperText
+                          css={{ position: "relative", lineHeight: "$3" }}
+                        >
                           Cover art must be .jpg, .png, .webp or .avif <br />
                           - Recommended size 2000x2000 <br />- Ensure you have
                           rights to the image you choose
@@ -582,7 +654,7 @@ export const Upload = () => {
                     }
                   >
                     <Flex
-                      css={{ mx: "auto", mt: "$10", width: "100%" }}
+                      css={{ mx: "auto", mt: "$5", width: "100%" }}
                       direction="column"
                       align="center"
                       gap="10"
@@ -735,7 +807,7 @@ export const Upload = () => {
                 </TabsContent>
                 <TabsContent value="monetization">
                   <Flex
-                    css={{ mt: "$10", $$formGap: "80px" }}
+                    css={{ mt: "$5", $$formGap: "80px" }}
                     direction="column"
                     gap="3"
                   >
@@ -750,10 +822,19 @@ export const Upload = () => {
                         max={100}
                         {...register("tokenQuantity")}
                       />
-                      {errors.tokenQuantity && (
+                      {errors.tokenQuantity ? (
                         <FormHelperError>
                           {errors.tokenQuantity.message}
                         </FormHelperError>
+                      ) : (
+                        <FormHelperAccordion
+                          value="content-tokens"
+                          triggerLabel="What are content tokens?"
+                        >
+                          Content tokens are units that represent the royalty
+                          share of a song. If you are unsure, we recommend to
+                          leave this at 100
+                        </FormHelperAccordion>
                       )}
                     </FormRow>
                     <Typography>License information</Typography>
@@ -901,8 +982,13 @@ export const Upload = () => {
                   </Flex>
                 </TabsContent>
                 <TabsContent value="review">
-                  <Typography css={{ mt: "$10" }} as="h3" contrast="hi">
-                    Review and upload
+                  <Typography
+                    size="4"
+                    css={{ mt: "$10" }}
+                    as="h3"
+                    contrast="hi"
+                  >
+                    Review
                   </Typography>
                   <Flex css={{ mt: "$5" }} direction="column" gap="7">
                     <Flex gap="5">
@@ -968,7 +1054,7 @@ export const Upload = () => {
                               </>
                             )}
                             <Typography contrast="hi" size="2">
-                              1 track
+                              {tracks} {tracks > 1 ? "tracks" : "track"}
                             </Typography>
                             <Typography contrast="hi" size="2">
                               •
@@ -995,7 +1081,11 @@ export const Upload = () => {
                               {getValues("genre")}
                             </Typography>
                             {getValues("topics") ? (
-                              <Flex wrap="wrap" gap="2">
+                              <Flex
+                                css={{ maxWidth: "40ch" }}
+                                wrap="wrap"
+                                gap="2"
+                              >
                                 {getValues("topics")
                                   ?.split(",")
                                   .map((topic) => (
@@ -1037,9 +1127,9 @@ export const Upload = () => {
           </Flex>
           <Box
             css={{
-              borderTop: "$slate6 1px solid",
-              backgroundColor: "$blackA11",
-              backdropFilter: "blur(4px)",
+              borderTop: "$neutralInvertedA6 1px solid",
+              backgroundColor: "$neutralA11",
+              backdropFilter: "blur(12px)",
               position: "fixed",
               right: 0,
               left: 0,
@@ -1058,7 +1148,18 @@ export const Upload = () => {
                 <Button
                   type="button"
                   onClick={handlePrevious}
-                  variant="outline"
+                  css={{
+                    backgroundColor: "$neutralInvertedA3",
+                    color: "$neutralInvertedA11",
+                    boxShadow: "0 0 0 1px $colors$neutralInvertedA6",
+                    backdropFilter: "blur(4px)",
+
+                    "&:hover": {
+                      backgroundColor: "$neutralInvertedA4",
+                      color: "$neutralInvertedA12",
+                      boxShadow: "0 0 0 1px $colors$neutralInvertedA7",
+                    },
+                  }}
                 >
                   Back
                 </Button>
@@ -1081,10 +1182,13 @@ export const Upload = () => {
                         form.formState.isSubmitting
                         // || form.formState.isSubmitSuccessful
                       }
-                      type="submit"
+                      type="button"
                       variant="solid"
+                      onClick={handleShowUploadDialog}
                     >
-                      {form.formState.isSubmitting ? "Submitting..." : "Submit"}
+                      {form.formState.isSubmitting
+                        ? "Uploading..."
+                        : "Confirm & Upload"}
                     </Button>
                   ) : (
                     <Button
@@ -1109,6 +1213,11 @@ export const Upload = () => {
                   )}
                 </>
               )}
+              <UploadDialog
+                data={getValues()}
+                open={showUploadDialog}
+                onClose={handleCancelUploadDialog}
+              />
             </Container>
           </Box>
         </Box>
