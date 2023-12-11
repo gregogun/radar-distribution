@@ -1,5 +1,5 @@
 import { UploadSchema } from "@/modules/upload/schema";
-import { UseFormGetValues } from "react-hook-form";
+import { BigNumber } from "bignumber.js";
 
 export const arrayBuffersEqual = (
   buffer1: ArrayBuffer,
@@ -94,4 +94,65 @@ export const formatDuration = ({
   }
 
   return `${minutes}:${formattedSeconds}`;
+};
+
+export const formatFileSize = (size: number): string => {
+  if (size < 1024) {
+    return size + " Bytes";
+  } else if (size < 1024 * 1024) {
+    return (size / 1024).toFixed(2) + " KB";
+  } else if (size < 1024 * 1024 * 1024) {
+    return (size / (1024 * 1024)).toFixed(2) + " MB";
+  } else {
+    return (size / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+  }
+};
+
+export const calculateTotalFileSize = (uploadData: UploadSchema): number => {
+  let totalSize = 0;
+
+  // Calculate size of release artwork file, if present
+  if (
+    uploadData &&
+    uploadData.releaseArtwork &&
+    uploadData.releaseArtwork.file
+  ) {
+    totalSize += uploadData.releaseArtwork.file.size;
+  }
+
+  // Calculate size of each track file
+  uploadData?.tracklist?.forEach((track) => {
+    if (track.file) {
+      totalSize += track.file.size;
+    }
+
+    // If there's artwork for each track, include its size
+    if (track.metadata.artwork && track.metadata.artwork.file) {
+      totalSize += track.metadata.artwork.file.size;
+    }
+  });
+
+  return totalSize;
+};
+
+export const formatCredits = (
+  winc: string | undefined,
+  fixedAmount?: number
+) => {
+  if (!winc) {
+    return;
+  }
+  const credits = new BigNumber(winc);
+
+  const formattedCredits = credits.dividedBy(1e12).toFixed(fixedAmount || 4);
+
+  return formattedCredits;
+};
+
+export const floorToFixed = (number: number | string, decimals: number) => {
+  const factor = Math.pow(10, decimals);
+  return (
+    Math.floor(typeof number === "number" ? number : Number(number) * factor) /
+    factor
+  );
 };

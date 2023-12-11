@@ -5,6 +5,11 @@ export const RadioGroup = styled(RadioGroupPrimitive.Root, {
   display: "flex",
   flexDirection: "column",
 
+  "&:disabled": {
+    opacity: 0.5,
+    pointerEvents: "none",
+  },
+
   variants: {
     gap: {
       1: {
@@ -51,45 +56,34 @@ export const RadioItem = styled(RadioGroupPrimitive.Item, {
   //custom
   br: "$round",
 
-  $$inactiveBorder: "$colors$slate7",
-  $$inactiveBorderHover: "$colors$slate8",
-  $$activeBorder: "$colors$blue9",
-  $$activeBorderHover: "$colors$blue10",
-
-  $$inactiveBackground: "$colors$slate3",
-  $$inactiveBackgroundHover: "$colors$slate3",
-  $$activeBackground: "$colors$blue9",
-  $$activeColor: "white",
-
   variants: {
     variant: {
       outline: {
         bg: "transparent",
-        boxShadow: "0 0 0 1px $$inactiveBorder",
-        color: "$$activeBorder",
+        boxShadow: "0 0 0 1px $colors$slate6",
+        color: "$slate11",
 
         "&:hover": {
-          boxShadow: "0 0 0 1px $$inactiveBorderHover",
+          boxShadow: "0 0 0 1px $colors$slate7",
         },
 
         '&[aria-checked="true"]': {
-          boxShadow: "0 0 0 1px $$activeBorder",
-          $$activeBorderHover: "$colors$blue10",
+          boxShadow: "0 0 0 1px $colors$slate12",
         },
       },
       solid: {
-        bg: "$$background",
-        boxShadow: "0 0 0 1px $$inactiveBorder",
-        color: "$$activeColor",
+        bg: "transparent",
+        boxShadow: "0 0 0 1px $colors$slate6",
+        color: "$slate11",
 
         "&:hover": {
-          bg: "$$backgroundHover",
-          boxShadow: "0 0 0 1px $$inactiveBorderHover",
+          bg: "$slate3",
+          boxShadow: "0 0 0 1px $colors$slate7",
         },
 
         '&[aria-checked="true"]': {
-          bg: "$$activeBackground",
-          boxShadow: "0 0 0 1px $$activeBorder",
+          bg: "$slate12",
+          color: "$slate1",
         },
       },
     },

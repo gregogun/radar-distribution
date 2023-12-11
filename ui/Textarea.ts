@@ -8,7 +8,7 @@ export const Textarea = styled("textarea", {
   margin: "0",
   outline: "none",
   padding: "0",
-  resize: "none",
+  resize: "vertical",
   width: "100%",
 
   backgroundColor: "transparent",

@@ -155,9 +155,9 @@ export const TrackItem = ({ track }: TrackItemProps) => {
             (track.upload.status === "idle" && <RxCrossCircled />)}
           {track.upload.status === "success" && <RxCheckCircled />}
           {track.upload.status === "in-progress" && <RxLapTimer />}
-          {track.upload.status === "success" &&
+          {/* {track.upload.status === "success" &&
             !track.upload.registered &&
-            " - (not registered)"}
+            " - (not registered)"} */}
         </Typography>
       </Flex>
     </Box>

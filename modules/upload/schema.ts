@@ -39,8 +39,8 @@ const trackMetadataSchema = z.object({
     .default(""),
   description: z
     .string()
-    .min(1, "Description is required")
-    .max(300, "Description must contain less than 300 characters")
+    .max(1000, "Description must contain less than 300 characters")
+    .optional()
     .default(""),
   genre: z.enum(genres).default("none"),
   topics: z.string().optional(),
@@ -72,14 +72,16 @@ export const uploadSchema = z.object({
     .default(""),
   description: z
     .string()
-    .min(1, "Description is required")
-    .max(300, "Description must contain less than 300 characters")
+    .max(1000, "Description must contain less than 300 characters")
+    .optional()
     .default(""),
   genre: z.enum(genres).default("none"),
   topics: z.string().optional(),
+  collectionCode: z.string().optional(),
   releaseDate: z.string().optional(),
   releaseArtwork: artworkSchema,
   tracklist: z.array(trackSchema).min(1, "At least 1 track is required"),
   license: licenseSchema,
   tokenQuantity: z.coerce.number().min(1).max(100),
+  uploadProvider: z.enum(["irys", "turbo"] as const),
 });

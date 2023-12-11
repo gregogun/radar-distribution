@@ -3,6 +3,8 @@ import styles from "@/styles/Home.module.css";
 import { Button } from "@/ui/Button";
 import { styled } from "@/stitches.config";
 import { Link } from "react-router-dom";
+import { useConnect } from "@/hooks/useConnect";
+import { ConnectWallet } from "../wallet/ConnectWallet";
 
 const LinkButton = styled(Link, Button, {
   cursor: "pointer",
@@ -14,6 +16,7 @@ const LinkButton = styled(Link, Button, {
 });
 
 export const Home = () => {
+  const { walletAddress, connecting } = useConnect();
   return (
     <>
       <Head>
@@ -26,13 +29,42 @@ export const Home = () => {
         <div className={styles.center}>
           <h1 className={styles.heading}>Make your music live forever</h1>
         </div>
-        <LinkButton
-          to={{
-            pathname: "/upload",
-          }}
-        >
-          Create a new release
-        </LinkButton>
+        {!walletAddress ? (
+          <ConnectWallet
+            permissions={[
+              "ACCESS_ADDRESS",
+              "DISPATCH",
+              "SIGN_TRANSACTION",
+              "ACCESS_ARWEAVE_CONFIG",
+              "ACCESS_PUBLIC_KEY",
+              "SIGNATURE",
+            ]}
+            providers={{
+              arconnect: true,
+              arweaveApp: false,
+            }}
+            appName="Radar"
+          >
+            <Button
+              css={{
+                zIndex: 0,
+                fontWeight: 400,
+                fontSize: "$3",
+              }}
+              variant="solid"
+            >
+              {connecting ? "Connecting..." : "Connect wallet"}
+            </Button>
+          </ConnectWallet>
+        ) : (
+          <LinkButton
+            to={{
+              pathname: "/upload",
+            }}
+          >
+            Create a new release
+          </LinkButton>
+        )}
       </main>
     </>
   );

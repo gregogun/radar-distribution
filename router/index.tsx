@@ -5,7 +5,6 @@ import { HashRouter, Route, Routes } from "react-router-dom";
 
 export const AppRouter = () => (
   <HashRouter>
-    <AppHeader />
     <Routes>
       <Route path={"/"} element={<Home />} />
       <Route path={"/upload"} element={<Upload />} />

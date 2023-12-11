@@ -9,15 +9,10 @@ import {
   RxCross2,
   RxExclamationTriangle,
 } from "react-icons/rx";
-import {
-  Controller,
-  FormProvider,
-  useFieldArray,
-  useForm,
-} from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "Zod";
-import { useEffect, useState } from "react";
+import { MutableRefObject, useEffect, useState } from "react";
 import { FormHelperError, FormHelperText, FormRow } from "@/ui/Form";
 import { Label } from "@/ui/Label";
 import { TextField } from "@/ui/TextField";
@@ -59,12 +54,14 @@ interface FundNodeDialogProps {
   modal: boolean;
   open: boolean;
   onClose: () => void;
+  dropdownTriggerRef: MutableRefObject<HTMLButtonElement | null>;
 }
 
 export const FundNodeDialog = ({
   modal,
   open,
   onClose,
+  dropdownTriggerRef,
 }: FundNodeDialogProps) => {
   const { walletAddress } = useConnect();
   const form = useForm<FundNodeSchema>({
@@ -78,10 +75,12 @@ export const FundNodeDialog = ({
   const { register, handleSubmit, watch, formState } = form;
   const { errors } = formState;
 
+  const irysNode = watch("irysNode");
+
   const fundMutation = useMutation({
     mutationFn: fundIrysNode,
+    mutationKey: [`fundNode-${irysNode}`],
     onSuccess: (data) => {
-      console.log("funded!");
       toast.success(
         `Successfully funded ${data.quantity} ${data.token} to ${irysNode}`
       );
@@ -93,14 +92,11 @@ export const FundNodeDialog = ({
   });
 
   const onSubmit = async (data: FundNodeSchema) => {
-    console.log("funding...");
     fundMutation.mutate({
       node: data.irysNode,
       amount: data.fundAmount,
     });
   };
-
-  const irysNode = watch("irysNode");
 
   const {
     data: balance,
@@ -131,6 +127,11 @@ export const FundNodeDialog = ({
   return (
     <Dialog modal={modal} open={open} onOpenChange={onClose}>
       <DialogContent
+        onCloseAutoFocus={(event) => {
+          // focus dropdown trigger for accessibility so user doesn't lose their place in the document
+          dropdownTriggerRef.current?.focus();
+          event.preventDefault();
+        }}
         css={{
           minHeight: 450,
         }}

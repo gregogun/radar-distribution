@@ -12,7 +12,7 @@ export const genres = [
   "jazz",
   "pop",
   "punk",
-  "r&b/Soul",
+  "r&b/soul",
   "reggae",
   "rock",
 ] as const;

@@ -1,12 +1,13 @@
 import { ConnectProvider } from "@/hooks/useConnect";
 import { darkTheme, globalCss } from "@/stitches.config";
-import "@/styles/globals.css";
+// import "@/styles/globals.css";
 import { ArweaveWebWallet } from "arweave-wallet-connector";
 import { ThemeProvider } from "next-themes";
 import type { AppProps } from "next/app";
 import { Toaster } from "sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { IrysProvider } from "@/hooks/useIrys";
+import { TurboProvider } from "@/hooks/useTurbo";
 
 const globalStyles = globalCss({
   "*, *::before, *::after": {
@@ -48,16 +49,18 @@ export default function App({ Component, pageProps }: AppProps) {
         value={{ light: "light-theme", dark: darkTheme.className }}
         enableSystem
       >
-        <IrysProvider>
-          <ConnectProvider
-            webWallet={webWallet}
-            includeProfile
-            detectWalletSwitch
-          >
-            <Toaster richColors position="bottom-right" />
-            <Component {...pageProps} />
-          </ConnectProvider>
-        </IrysProvider>
+        <TurboProvider>
+          <IrysProvider>
+            <ConnectProvider
+              webWallet={webWallet}
+              includeProfile
+              detectWalletSwitch
+            >
+              <Toaster richColors position="bottom-right" />
+              <Component {...pageProps} />
+            </ConnectProvider>
+          </IrysProvider>
+        </TurboProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

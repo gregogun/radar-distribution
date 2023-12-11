@@ -25,6 +25,9 @@ export const TextField = styled("input", {
   br: "$1",
   px: "$3",
   color: "$slate12",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
 
   "&::placeholder": {
     color: "$slate9",
